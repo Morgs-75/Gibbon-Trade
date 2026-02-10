@@ -209,6 +209,45 @@
         }
         .best-price { background: rgba(34,197,94,0.1); border-radius: 4px; padding: 0.1rem 0.3rem; }
 
+        /* Refresh modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6); z-index: 200;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.5rem; width: 320px;
+            text-align: center;
+        }
+        .modal h3 { margin-bottom: 0.75rem; font-size: 1rem; }
+        .modal input[type="password"] {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.6rem; border-radius: 6px;
+            font-size: 1.2rem; text-align: center; width: 140px;
+            letter-spacing: 0.3em; outline: none;
+        }
+        .modal input[type="password"]:focus { border-color: var(--accent); }
+        .modal-btns { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; }
+        .btn {
+            padding: 0.45rem 1rem; border: none; border-radius: 6px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--surface2); }
+        .refresh-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 0.4rem 0.7rem;
+            border-radius: 6px; font-size: 0.78rem; cursor: pointer;
+        }
+        .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+        .modal-msg { font-size: 0.82rem; margin-top: 0.75rem; min-height: 1.2em; }
+        .msg-ok { color: var(--green); }
+        .msg-err { color: var(--red); }
+
         @media (max-width: 768px) {
             .controls { width: 100%; }
             input[type="text"] { width: 100%; flex: 1; }
@@ -237,9 +276,23 @@
                 <input type="range" id="threshold" min="25" max="80" value="40" oninput="updateThresholdLabel()" onchange="renderAll()">
                 <span id="threshold-label">40%</span>
             </div>
+            <button class="refresh-btn" onclick="showPinModal()">Refresh Data</button>
         </div>
     </div>
 </header>
+
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pin-modal">
+    <div class="modal">
+        <h3>Enter PIN to refresh data</h3>
+        <input type="password" id="pin-input" maxlength="4" placeholder="----" onkeydown="if(event.key==='Enter')triggerScrape()">
+        <div class="modal-btns">
+            <button class="btn btn-ghost" onclick="closePinModal()">Cancel</button>
+            <button class="btn btn-primary" id="scrape-btn" onclick="triggerScrape()">Scrape</button>
+        </div>
+        <div class="modal-msg" id="pin-msg"></div>
+    </div>
+</div>
 
 <div class="container">
     <div class="stats-bar" id="stats-bar" style="display:none;"></div>
@@ -674,6 +727,66 @@ async function loadData() {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// PIN-protected scrape trigger
+// ---------------------------------------------------------------------------
+function showPinModal() {
+    document.getElementById('pin-modal').classList.add('active');
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-msg').textContent = '';
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+function closePinModal() {
+    document.getElementById('pin-modal').classList.remove('active');
+}
+
+async function triggerScrape() {
+    const pin = document.getElementById('pin-input').value;
+    const msg = document.getElementById('pin-msg');
+    const btn = document.getElementById('scrape-btn');
+
+    if (!pin || pin.length < 4) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Enter your 4-digit PIN';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Triggering...';
+    msg.className = 'modal-msg';
+    msg.textContent = '';
+
+    try {
+        const res = await fetch('/api/trigger-scrape', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            msg.className = 'modal-msg msg-ok';
+            msg.textContent = data.message;
+            setTimeout(closePinModal, 3000);
+        } else {
+            msg.className = 'modal-msg msg-err';
+            msg.textContent = data.error || 'Failed';
+        }
+    } catch (e) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Network error: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Scrape';
+    }
+}
+
+// Close modal on overlay click
+document.getElementById('pin-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closePinModal();
+});
 
 loadData();
 </script>
