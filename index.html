@@ -603,16 +603,75 @@ function renderAllProducts(el, products) {
 }
 
 // ---------------------------------------------------------------------------
-// Load data
+// Supabase config
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
+
+const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+};
+
+async function sbFetch(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Load data from Supabase
 // ---------------------------------------------------------------------------
 async function loadData() {
     try {
-        const res = await fetch('data.json');
-        DATA = await res.json();
+        // Fetch products and latest scrape log in parallel
+        const [products, logs] = await Promise.all([
+            sbFetch('products?select=*&order=name.asc'),
+            sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
+        ]);
+
+        // Group by source into supplier structure
+        const bySource = {};
+        for (const p of products) {
+            if (!bySource[p.source]) bySource[p.source] = [];
+            bySource[p.source].push({
+                name: p.name,
+                price: p.price ? parseFloat(p.price) : null,
+                price_display: p.price_display || (p.price ? `$${parseFloat(p.price).toFixed(2)} GST excl.` : 'Contact for Price'),
+                url: p.url || '',
+                image: p.image || '',
+                category: p.category || '',
+                sku: p.sku || '',
+            });
+        }
+
+        // Map source keys to supplier meta
+        const sourceToKey = { kevmor: 'kevmor', intafloors: 'intafloors', gibbon: 'gibbon' };
+        const suppliers = {};
+        for (const [src, prods] of Object.entries(bySource)) {
+            const key = sourceToKey[src] || src;
+            suppliers[key] = { products: prods };
+        }
+
+        const latestLog = logs.length ? logs[0] : null;
+
+        DATA = {
+            timestamp: latestLog ? latestLog.completed_at : new Date().toISOString(),
+            suppliers,
+        };
+
         renderAll();
     } catch (e) {
-        document.getElementById('content').innerHTML =
-            `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p></div>`;
+        console.error('Supabase load error:', e);
+        // Fallback: try loading from static data.json
+        try {
+            const res = await fetch('data.json');
+            DATA = await res.json();
+            renderAll();
+        } catch (e2) {
+            document.getElementById('content').innerHTML =
+                `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p><p style="font-size:0.8rem;margin-top:0.5rem">Falling back to static data also failed.</p></div>`;
+        }
     }
 }
 
