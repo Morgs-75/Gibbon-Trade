@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gibbon Trade - Flooring Supplier Price Comparison</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --kevmor: #f97316;
+            --intafloors: #06b6d4;
+            --gibbon: #22c55e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .container { max-width: 1500px; margin: 0 auto; padding: 0 1rem; }
+
+        /* Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--green));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; color: white;
+        }
+        h1 { font-size: 1.2rem; font-weight: 700; }
+        h1 .subtitle { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; display: block; line-height: 1.1; }
+
+        .controls {
+            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+        }
+        input[type="text"], select {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.45rem 0.7rem;
+            border-radius: 6px; font-size: 0.85rem; outline: none;
+        }
+        input[type="text"]:focus, select:focus { border-color: var(--accent); }
+        input[type="text"] { width: 200px; }
+        .slider-group {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.8rem; color: var(--text-muted);
+        }
+        .slider-group input[type="range"] { width: 80px; accent-color: var(--accent); }
+
+        /* Supplier toggles */
+        .supplier-toggles {
+            display: flex; gap: 0.35rem;
+        }
+        .supplier-toggle {
+            padding: 0.35rem 0.7rem; border-radius: 6px;
+            font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.15s;
+            user-select: none;
+        }
+        .supplier-toggle.active { opacity: 1; }
+        .supplier-toggle:not(.active) { opacity: 0.4; }
+        .toggle-kevmor { background: rgba(249,115,22,0.15); color: var(--kevmor); border-color: var(--kevmor); }
+        .toggle-intafloors { background: rgba(6,182,212,0.15); color: var(--intafloors); border-color: var(--intafloors); }
+        .toggle-gibbon { background: rgba(34,197,94,0.15); color: var(--gibbon); border-color: var(--gibbon); }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex; gap: 0.75rem; padding: 0.75rem 1rem;
+            margin: 0.75rem 0; background: var(--surface);
+            border-radius: 8px; flex-wrap: wrap;
+        }
+        .stat { text-align: center; flex: 1; min-width: 100px; }
+        .stat-value { font-size: 1.3rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 0.2rem; margin: 0.75rem 0 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab {
+            padding: 0.45rem 0.9rem; border: none; background: none;
+            color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+            font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab .badge {
+            background: var(--surface2); padding: 0.1rem 0.45rem;
+            border-radius: 10px; font-size: 0.72rem; margin-left: 0.3rem;
+        }
+        .tab.active .badge { background: var(--accent); color: white; }
+
+        /* Table styles */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; }
+        th {
+            background: var(--surface2); padding: 0.6rem 0.5rem;
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted);
+            text-align: left; position: sticky; top: 56px; z-index: 10;
+        }
+        td {
+            padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--border);
+            vertical-align: top; font-size: 0.85rem;
+        }
+        tr:hover td { background: rgba(59,130,246,0.04); }
+
+        .product-cell { display: flex; align-items: flex-start; gap: 0.6rem; }
+        .product-img {
+            width: 44px; height: 44px; object-fit: contain;
+            border-radius: 4px; background: white; flex-shrink: 0;
+        }
+        .product-name { font-weight: 600; font-size: 0.82rem; line-height: 1.3; }
+        .product-name a { color: var(--text); text-decoration: none; }
+        .product-name a:hover { color: var(--accent); text-decoration: underline; }
+        .product-category { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+        .price { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+        .price-na { color: var(--text-muted); font-weight: 400; font-size: 0.78rem; }
+        .price-cheaper { color: var(--green); }
+        .price-dearer { color: var(--red); }
+
+        .match-score {
+            display: inline-block; padding: 0.12rem 0.45rem;
+            border-radius: 4px; font-size: 0.72rem; font-weight: 600;
+        }
+        .score-high { background: rgba(34,197,94,0.2); color: var(--green); }
+        .score-medium { background: rgba(245,158,11,0.2); color: var(--orange); }
+        .score-low { background: rgba(239,68,68,0.2); color: var(--red); }
+
+        .diff-cell { text-align: center; }
+        .diff-amount { font-weight: 700; font-size: 0.88rem; }
+        .diff-pct { font-size: 0.72rem; color: var(--text-muted); }
+
+        .source-tag {
+            display: inline-block; padding: 0.1rem 0.4rem;
+            border-radius: 3px; font-size: 0.68rem; font-weight: 600;
+            text-transform: uppercase;
+        }
+        .source-kevmor { background: rgba(249,115,22,0.2); color: var(--kevmor); }
+        .source-intafloors { background: rgba(6,182,212,0.2); color: var(--intafloors); }
+        .source-gibbon { background: rgba(34,197,94,0.2); color: var(--gibbon); }
+
+        .empty-state {
+            text-align: center; padding: 3rem 2rem; color: var(--text-muted);
+        }
+        .empty-state h2 { font-size: 1.15rem; margin-bottom: 0.4rem; color: var(--text); }
+
+        .timestamp {
+            font-size: 0.72rem; color: var(--text-muted);
+            text-align: right; margin-bottom: 0.4rem;
+        }
+
+        .loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 4rem; gap: 0.75rem; color: var(--text-muted);
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--accent); border-top-color: transparent;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Comparison row - multi-supplier */
+        .supplier-prices {
+            display: flex; flex-direction: column; gap: 0.3rem;
+        }
+        .supplier-price-row {
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .supplier-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .supplier-price-name {
+            font-size: 0.75rem; color: var(--text-muted); min-width: 70px;
+        }
+        .best-price { background: rgba(34,197,94,0.1); border-radius: 4px; padding: 0.1rem 0.3rem; }
+
+        @media (max-width: 768px) {
+            .controls { width: 100%; }
+            input[type="text"] { width: 100%; flex: 1; }
+            .product-img { width: 36px; height: 36px; }
+            th, td { padding: 0.4rem 0.3rem; font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">GT</div>
+            <h1>Gibbon Trade<span class="subtitle">Flooring Supplier Comparison</span></h1>
+        </div>
+        <div class="controls">
+            <div class="supplier-toggles">
+                <div class="supplier-toggle toggle-kevmor active" data-supplier="kevmor" onclick="toggleSupplier('kevmor')">Kevmor</div>
+                <div class="supplier-toggle toggle-intafloors active" data-supplier="intafloors" onclick="toggleSupplier('intafloors')">Intafloors</div>
+                <div class="supplier-toggle toggle-gibbon active" data-supplier="gibbon" onclick="toggleSupplier('gibbon')">Gibbon Trade</div>
+            </div>
+            <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
+            <div class="slider-group">
+                <label for="threshold">Match:</label>
+                <input type="range" id="threshold" min="25" max="80" value="40" oninput="updateThresholdLabel()" onchange="renderAll()">
+                <span id="threshold-label">40%</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="stats-bar" id="stats-bar" style="display:none;"></div>
+    <div id="timestamp" class="timestamp"></div>
+    <div class="tabs" id="tabs" style="display:none;">
+        <button class="tab active" data-tab="matched" onclick="switchTab('matched')">
+            Price Comparison <span class="badge" id="badge-matched">0</span>
+        </button>
+        <button class="tab" data-tab="all" onclick="switchTab('all')">
+            All Products <span class="badge" id="badge-all">0</span>
+        </button>
+        <button class="tab" data-tab="unmatched" onclick="switchTab('unmatched')">
+            Unique Products <span class="badge" id="badge-unmatched">0</span>
+        </button>
+    </div>
+    <div id="content">
+        <div class="loading"><div class="spinner"></div>Loading product data...</div>
+    </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+let DATA = null;
+let activeSuppliers = new Set(['kevmor', 'intafloors', 'gibbon']);
+let currentTab = 'matched';
+let debounceTimer = null;
+let matchCache = null;
+let matchCacheKey = '';
+
+const SUPPLIER_META = {
+    kevmor: { name: 'Kevmor', color: '#f97316', cssClass: 'source-kevmor' },
+    intafloors: { name: 'Intafloors', color: '#06b6d4', cssClass: 'source-intafloors' },
+    gibbon: { name: 'Gibbon Trade', color: '#22c55e', cssClass: 'source-gibbon' },
+};
+
+// ---------------------------------------------------------------------------
+// Matching logic (ported from Python)
+// ---------------------------------------------------------------------------
+const STOP_WORDS = new Set([
+    'the','a','an','and','or','for','of','in','with','to','is','by','at','on',
+    'all','new','free','per','mm','kg','ltr','litre','ml','pack','set','each',
+    'pair','x','gst','excl','inc',
+]);
+
+function normalize(name) {
+    name = name.toLowerCase().trim();
+    name = name.replace(/[®™©�\u0000-\u001f]/g, '');
+    name = name.replace(/\s*\(.*?\)\s*/g, ' ');
+    for (const sep of [' - ', ' – ', ' — ']) {
+        const i = name.indexOf(sep);
+        if (i > 10) name = name.substring(0, i);
+    }
+    return name.replace(/\s+/g, ' ').trim();
+}
+
+function tokenize(name) {
+    const norm = normalize(name);
+    const tokens = new Set(norm.match(/[a-z0-9]+/g) || []);
+    STOP_WORDS.forEach(w => tokens.delete(w));
+    return tokens;
+}
+
+function similarity(name1, name2) {
+    const t1 = tokenize(name1);
+    const t2 = tokenize(name2);
+    if (!t1.size || !t2.size) return 0;
+    let intersection = 0;
+    t1.forEach(t => { if (t2.has(t)) intersection++; });
+    const union = new Set([...t1, ...t2]).size;
+    return intersection / union;
+}
+
+function matchProducts(supplierKeys, threshold) {
+    const cacheKey = supplierKeys.sort().join(',') + ':' + threshold;
+    if (matchCache && matchCacheKey === cacheKey) return matchCache;
+
+    const allProducts = [];
+    for (const key of supplierKeys) {
+        const sup = DATA.suppliers[key];
+        if (!sup) continue;
+        for (const p of sup.products) {
+            allProducts.push({ ...p, _supplier: key, _tokens: tokenize(p.name) });
+        }
+    }
+
+    // Group by matching - greedy approach
+    const used = new Set();
+    const groups = [];
+
+    for (let i = 0; i < allProducts.length; i++) {
+        if (used.has(i)) continue;
+        const group = [{ idx: i, product: allProducts[i] }];
+        used.add(i);
+
+        for (let j = i + 1; j < allProducts.length; j++) {
+            if (used.has(j)) continue;
+            if (allProducts[j]._supplier === allProducts[i]._supplier) continue;
+
+            const score = similarity(allProducts[i].name, allProducts[j].name);
+            if (score >= threshold) {
+                // Check this product matches the group well
+                let matchesGroup = true;
+                for (const member of group) {
+                    if (allProducts[j]._supplier === member.product._supplier) {
+                        matchesGroup = false;
+                        break;
+                    }
+                }
+                if (matchesGroup) {
+                    group.push({ idx: j, product: allProducts[j], score });
+                    used.add(j);
+                }
+            }
+        }
+
+        if (group.length > 1) {
+            const avgScore = group.slice(1).reduce((s, g) => s + (g.score || 1), 0) / (group.length - 1);
+            groups.push({
+                products: group.map(g => g.product),
+                score: avgScore,
+            });
+        }
+    }
+
+    // Unmatched
+    const unmatched = [];
+    for (let i = 0; i < allProducts.length; i++) {
+        if (!used.has(i)) unmatched.push(allProducts[i]);
+    }
+
+    groups.sort((a, b) => b.score - a.score);
+    const result = { groups, unmatched, allProducts };
+    matchCache = result;
+    matchCacheKey = cacheKey;
+    return result;
+}
+
+// ---------------------------------------------------------------------------
+// UI
+// ---------------------------------------------------------------------------
+function escHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}
+
+function toggleSupplier(key) {
+    if (activeSuppliers.has(key)) {
+        if (activeSuppliers.size <= 1) return; // Must have at least 1
+        activeSuppliers.delete(key);
+    } else {
+        activeSuppliers.add(key);
+    }
+    document.querySelector(`.supplier-toggle[data-supplier="${key}"]`)
+        .classList.toggle('active', activeSuppliers.has(key));
+    matchCache = null;
+    renderAll();
+}
+
+function debounceRender() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(renderAll, 250);
+}
+
+function updateThresholdLabel() {
+    document.getElementById('threshold-label').textContent = document.getElementById('threshold').value + '%';
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+    renderContent();
+}
+
+function renderAll() {
+    if (!DATA) return;
+    const keys = [...activeSuppliers];
+    const threshold = document.getElementById('threshold').value / 100;
+    const result = matchProducts(keys, threshold);
+    renderStats(result, keys);
+    renderContent();
+}
+
+function renderStats(result, keys) {
+    const bar = document.getElementById('stats-bar');
+    bar.style.display = 'flex';
+    document.getElementById('tabs').style.display = 'flex';
+
+    let html = '';
+    for (const key of keys) {
+        const sup = DATA.suppliers[key];
+        const meta = SUPPLIER_META[key];
+        const withPrice = sup.products.filter(p => p.price).length;
+        html += `<div class="stat">
+            <div class="stat-value" style="color:${meta.color}">${sup.products.length}</div>
+            <div class="stat-label">${meta.name} (${withPrice} priced)</div>
+        </div>`;
+    }
+    html += `<div class="stat">
+        <div class="stat-value" style="color:var(--accent)">${result.groups.length}</div>
+        <div class="stat-label">Matched Groups</div>
+    </div>`;
+    bar.innerHTML = html;
+
+    if (DATA.timestamp) {
+        document.getElementById('timestamp').textContent = `Data from: ${new Date(DATA.timestamp).toLocaleString()}`;
+    }
+
+    const search = document.getElementById('search').value.toLowerCase();
+    const filtered = filterGroups(result.groups, search);
+    const filteredUnmatched = filterProducts(result.unmatched, search);
+
+    document.getElementById('badge-matched').textContent = filtered.length;
+    document.getElementById('badge-all').textContent = result.allProducts.length;
+    document.getElementById('badge-unmatched').textContent = filteredUnmatched.length;
+}
+
+function filterGroups(groups, search) {
+    if (!search) return groups;
+    return groups.filter(g => g.products.some(p => p.name.toLowerCase().includes(search)));
+}
+
+function filterProducts(products, search) {
+    if (!search) return products;
+    return products.filter(p => p.name.toLowerCase().includes(search));
+}
+
+function renderContent() {
+    const el = document.getElementById('content');
+    if (!DATA) return;
+
+    const keys = [...activeSuppliers];
+    const threshold = document.getElementById('threshold').value / 100;
+    const result = matchProducts(keys, threshold);
+    const search = document.getElementById('search').value.toLowerCase();
+
+    if (currentTab === 'matched') {
+        renderComparisons(el, filterGroups(result.groups, search), keys);
+    } else if (currentTab === 'all') {
+        renderAllProducts(el, filterProducts(result.allProducts, search));
+    } else {
+        renderAllProducts(el, filterProducts(result.unmatched, search));
+    }
+}
+
+function renderComparisons(el, groups, keys) {
+    if (!groups.length) {
+        el.innerHTML = `<div class="empty-state"><h2>No Matched Products</h2><p>Try lowering the match threshold, enabling more suppliers, or broadening your search.</p></div>`;
+        return;
+    }
+
+    // Build dynamic columns based on active suppliers
+    let headerHtml = '<th style="width:5%">#</th>';
+    for (const key of keys) {
+        const meta = SUPPLIER_META[key];
+        headerHtml += `<th style="color:${meta.color}">${meta.name} Product</th>`;
+        headerHtml += `<th style="width:10%;color:${meta.color}">Price</th>`;
+    }
+    headerHtml += '<th style="width:8%">Savings</th><th style="width:6%">Match</th>';
+
+    let html = `<table><thead><tr>${headerHtml}</tr></thead><tbody>`;
+
+    for (let gi = 0; gi < groups.length; gi++) {
+        const g = groups[gi];
+
+        // Map products by supplier
+        const bySupplier = {};
+        for (const p of g.products) {
+            bySupplier[p._supplier] = p;
+        }
+
+        // Find best price
+        const prices = g.products.filter(p => p.price).map(p => ({ supplier: p._supplier, price: p.price }));
+        prices.sort((a, b) => a.price - b.price);
+        const bestPrice = prices.length ? prices[0].price : null;
+        const bestSupplier = prices.length ? prices[0].supplier : null;
+        const worstPrice = prices.length > 1 ? prices[prices.length - 1].price : null;
+
+        let savingsHtml = '<span class="price-na">-</span>';
+        if (bestPrice && worstPrice && bestPrice < worstPrice) {
+            const saving = worstPrice - bestPrice;
+            const pct = ((saving / worstPrice) * 100).toFixed(1);
+            savingsHtml = `<div class="diff-amount" style="color:var(--green)">$${saving.toFixed(2)}</div>
+                <div class="diff-pct">${pct}% saved</div>`;
+        }
+
+        const scoreClass = g.score >= 0.7 ? 'score-high' : g.score >= 0.5 ? 'score-medium' : 'score-low';
+
+        html += `<tr><td style="color:var(--text-muted);font-size:0.75rem">${gi + 1}</td>`;
+
+        for (const key of keys) {
+            const p = bySupplier[key];
+            if (p) {
+                const isBest = p.price && p._supplier === bestSupplier && prices.length > 1;
+                const isWorst = p.price && worstPrice && p.price === worstPrice && prices.length > 1 && bestPrice < worstPrice;
+                const priceClass = isBest ? 'price-cheaper' : isWorst ? 'price-dearer' : '';
+
+                html += `<td>
+                    <div class="product-cell">
+                        ${p.image ? `<img class="product-img" src="${escHtml(p.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                        <div>
+                            <div class="product-name"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a></div>
+                            <div class="product-category">${escHtml(p.category || '')}</div>
+                        </div>
+                    </div>
+                </td>`;
+                html += `<td><span class="price ${priceClass}">${p.price ? '$' + p.price.toFixed(2) : '<span class="price-na">' + escHtml(p.price_display || 'N/A') + '</span>'}</span></td>`;
+            } else {
+                html += `<td><span class="price-na" style="font-size:0.78rem">Not listed</span></td><td>-</td>`;
+            }
+        }
+
+        html += `<td class="diff-cell">${savingsHtml}</td>`;
+        html += `<td><span class="match-score ${scoreClass}">${Math.round(g.score * 100)}%</span></td>`;
+        html += `</tr>`;
+    }
+
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function renderAllProducts(el, products) {
+    if (!products.length) {
+        el.innerHTML = `<div class="empty-state"><h2>No Products Found</h2><p>Try adjusting your search or supplier selection.</p></div>`;
+        return;
+    }
+
+    let html = `<table><thead><tr>
+        <th style="width:5%">#</th>
+        <th style="width:45%">Product</th>
+        <th style="width:15%">Price</th>
+        <th style="width:20%">Category</th>
+        <th style="width:15%">Supplier</th>
+    </tr></thead><tbody>`;
+
+    for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+        const meta = SUPPLIER_META[p._supplier] || { name: p.source || '?', cssClass: '' };
+
+        html += `<tr>
+            <td style="color:var(--text-muted);font-size:0.75rem">${i + 1}</td>
+            <td>
+                <div class="product-cell">
+                    ${p.image ? `<img class="product-img" src="${escHtml(p.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                    <div>
+                        <div class="product-name"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a></div>
+                    </div>
+                </div>
+            </td>
+            <td><span class="price">${p.price ? '$' + p.price.toFixed(2) : '<span class="price-na">' + escHtml(p.price_display || 'N/A') + '</span>'}</span></td>
+            <td class="product-category">${escHtml(p.category || '')}</td>
+            <td><span class="source-tag ${meta.cssClass}">${escHtml(meta.name)}</span></td>
+        </tr>`;
+    }
+
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Load data
+// ---------------------------------------------------------------------------
+async function loadData() {
+    try {
+        const res = await fetch('data.json');
+        DATA = await res.json();
+        renderAll();
+    } catch (e) {
+        document.getElementById('content').innerHTML =
+            `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p></div>`;
+    }
+}
+
+loadData();
+</script>
+</body>
+</html>
