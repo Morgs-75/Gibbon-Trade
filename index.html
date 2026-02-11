@@ -20,6 +20,10 @@
             --kevmor: #f97316;
             --intafloors: #06b6d4;
             --gibbon: #22c55e;
+            --marques: #a855f7;
+            --floortrade: #ec4899;
+            --gluesntools: #eab308;
+            --homely: #14b8a6;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -94,6 +98,10 @@
         .toggle-kevmor { background: rgba(249,115,22,0.15); color: var(--kevmor); border-color: var(--kevmor); }
         .toggle-intafloors { background: rgba(6,182,212,0.15); color: var(--intafloors); border-color: var(--intafloors); }
         .toggle-gibbon { background: rgba(34,197,94,0.15); color: var(--gibbon); border-color: var(--gibbon); }
+        .toggle-marques { background: rgba(168,85,247,0.15); color: var(--marques); border-color: var(--marques); }
+        .toggle-floortrade { background: rgba(236,72,153,0.15); color: var(--floortrade); border-color: var(--floortrade); }
+        .toggle-gluesntools { background: rgba(234,179,8,0.15); color: var(--gluesntools); border-color: var(--gluesntools); }
+        .toggle-homely { background: rgba(20,184,166,0.15); color: var(--homely); border-color: var(--homely); }
 
         /* Stats bar */
         .stats-bar {
@@ -124,7 +132,8 @@
         .tab.active .badge { background: var(--accent); color: white; }
 
         /* Table styles */
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; }
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; min-width: 900px; }
         th {
             background: var(--surface2); padding: 0.6rem 0.5rem;
             font-size: 0.72rem; text-transform: uppercase;
@@ -172,6 +181,10 @@
         .source-kevmor { background: rgba(249,115,22,0.2); color: var(--kevmor); }
         .source-intafloors { background: rgba(6,182,212,0.2); color: var(--intafloors); }
         .source-gibbon { background: rgba(34,197,94,0.2); color: var(--gibbon); }
+        .source-marques { background: rgba(168,85,247,0.2); color: var(--marques); }
+        .source-floortrade { background: rgba(236,72,153,0.2); color: var(--floortrade); }
+        .source-gluesntools { background: rgba(234,179,8,0.2); color: var(--gluesntools); }
+        .source-homely { background: rgba(20,184,166,0.2); color: var(--homely); }
 
         .empty-state {
             text-align: center; padding: 3rem 2rem; color: var(--text-muted);
@@ -269,6 +282,10 @@
                 <div class="supplier-toggle toggle-kevmor active" data-supplier="kevmor" onclick="toggleSupplier('kevmor')">Kevmor</div>
                 <div class="supplier-toggle toggle-intafloors active" data-supplier="intafloors" onclick="toggleSupplier('intafloors')">Intafloors</div>
                 <div class="supplier-toggle toggle-gibbon active" data-supplier="gibbon" onclick="toggleSupplier('gibbon')">Gibbon Trade</div>
+                <div class="supplier-toggle toggle-marques active" data-supplier="marques" onclick="toggleSupplier('marques')">Marques</div>
+                <div class="supplier-toggle toggle-floortrade active" data-supplier="floortrade" onclick="toggleSupplier('floortrade')">Floor Trade</div>
+                <div class="supplier-toggle toggle-gluesntools active" data-supplier="gluesntools" onclick="toggleSupplier('gluesntools')">Glues N Tools</div>
+                <div class="supplier-toggle toggle-homely active" data-supplier="homely" onclick="toggleSupplier('homely')">Homely</div>
             </div>
             <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
             <div class="slider-group">
@@ -318,7 +335,7 @@
 // State
 // ---------------------------------------------------------------------------
 let DATA = null;
-let activeSuppliers = new Set(['kevmor', 'intafloors', 'gibbon']);
+let activeSuppliers = new Set(['kevmor', 'intafloors', 'gibbon', 'marques', 'floortrade', 'gluesntools', 'homely']);
 let currentTab = 'matched';
 let debounceTimer = null;
 let matchCache = null;
@@ -328,6 +345,10 @@ const SUPPLIER_META = {
     kevmor: { name: 'Kevmor', color: '#f97316', cssClass: 'source-kevmor' },
     intafloors: { name: 'Intafloors', color: '#06b6d4', cssClass: 'source-intafloors' },
     gibbon: { name: 'Gibbon Trade', color: '#22c55e', cssClass: 'source-gibbon' },
+    marques: { name: 'Marques', color: '#a855f7', cssClass: 'source-marques' },
+    floortrade: { name: 'Floor Trade', color: '#ec4899', cssClass: 'source-floortrade' },
+    gluesntools: { name: 'Glues N Tools', color: '#eab308', cssClass: 'source-gluesntools' },
+    homely: { name: 'Homely', color: '#14b8a6', cssClass: 'source-homely' },
 };
 
 // ---------------------------------------------------------------------------
@@ -556,7 +577,7 @@ function renderComparisons(el, groups, keys) {
     }
     headerHtml += '<th style="width:8%">Savings</th><th style="width:6%">Match</th>';
 
-    let html = `<table><thead><tr>${headerHtml}</tr></thead><tbody>`;
+    let html = `<div class="table-wrapper"><table><thead><tr>${headerHtml}</tr></thead><tbody>`;
 
     for (let gi = 0; gi < groups.length; gi++) {
         const g = groups[gi];
@@ -613,7 +634,7 @@ function renderComparisons(el, groups, keys) {
         html += `</tr>`;
     }
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     el.innerHTML = html;
 }
 
@@ -623,7 +644,7 @@ function renderAllProducts(el, products) {
         return;
     }
 
-    let html = `<table><thead><tr>
+    let html = `<div class="table-wrapper"><table><thead><tr>
         <th style="width:5%">#</th>
         <th style="width:45%">Product</th>
         <th style="width:15%">Price</th>
@@ -651,7 +672,7 @@ function renderAllProducts(el, products) {
         </tr>`;
     }
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     el.innerHTML = html;
 }
 
@@ -699,7 +720,7 @@ async function loadData() {
         }
 
         // Map source keys to supplier meta
-        const sourceToKey = { kevmor: 'kevmor', intafloors: 'intafloors', gibbon: 'gibbon' };
+        const sourceToKey = { kevmor: 'kevmor', intafloors: 'intafloors', gibbon: 'gibbon', marques: 'marques', floortrade: 'floortrade', gluesntools: 'gluesntools', homely: 'homely' };
         const suppliers = {};
         for (const [src, prods] of Object.entries(bySource)) {
             const key = sourceToKey[src] || src;

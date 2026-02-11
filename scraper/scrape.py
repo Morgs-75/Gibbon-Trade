@@ -1,5 +1,6 @@
 """
-Scheduled scraper for Kevmor, Intafloors, and Gibbon Trade.
+Scheduled scraper for flooring supplier price comparison.
+Supports: Kevmor, Intafloors, Gibbon Trade, Marques, Floor Trade, Glues N Tools, Homely.
 Writes product data to Supabase PostgreSQL.
 
 Usage:
@@ -300,6 +301,103 @@ def scrape_gibbon():
     return _scrape_woocommerce("https://gibbontrade.com.au", "gibbon")
 
 
+def scrape_marques():
+    return _scrape_woocommerce("https://marquesflooring.com.au", "marques")
+
+
+def scrape_floortrade():
+    return _scrape_woocommerce("https://www.floortrade.au", "floortrade")
+
+
+def scrape_homely():
+    return _scrape_woocommerce("https://www.homelyflooring.com.au", "homely")
+
+
+# ---------------------------------------------------------------------------
+# Shopify Store API
+# ---------------------------------------------------------------------------
+
+def _scrape_shopify(base_url, source_name):
+    """Generic Shopify /products.json scraper."""
+    logger.info(f"Starting {source_name} scrape...")
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+    })
+
+    products = []
+    page = 1
+    while True:
+        logger.info(f"  {source_name}: page {page} ({len(products)} so far)")
+        try:
+            r = session.get(
+                f"{base_url}/products.json?limit=250&page={page}", timeout=30
+            )
+            if r.status_code != 200:
+                logger.warning(f"{source_name} HTTP {r.status_code} on page {page}")
+                break
+
+            data = r.json().get("products", [])
+            if not data:
+                break
+
+            for p in data:
+                variant = p.get("variants", [{}])[0]
+                try:
+                    price_val = float(variant.get("price", "0") or "0")
+                except (ValueError, TypeError):
+                    price_val = 0
+
+                compare_at = None
+                try:
+                    raw = variant.get("compare_at_price")
+                    if raw:
+                        compare_at = float(raw)
+                except (ValueError, TypeError):
+                    pass
+
+                if price_val == 0:
+                    price_display = "Contact for Price"
+                elif compare_at and compare_at > price_val:
+                    price_display = f"${price_val:,.2f} (was ${compare_at:,.2f})"
+                else:
+                    price_display = f"${price_val:,.2f}"
+
+                # Strip HTML from body_html for description
+                body = p.get("body_html") or ""
+                description = BeautifulSoup(body, "html.parser").get_text(strip=True)[:200]
+
+                imgs = p.get("images", [])
+                img_src = imgs[0].get("src", "") if imgs else ""
+
+                products.append({
+                    "source": source_name,
+                    "name": p.get("title", "Unknown"),
+                    "price": price_val if price_val > 0 else None,
+                    "price_display": price_display,
+                    "url": f"{base_url}/products/{p.get('handle', '')}",
+                    "image": img_src,
+                    "category": p.get("product_type", "") or "Uncategorized",
+                    "sku": variant.get("sku", ""),
+                    "description": description,
+                })
+
+            page += 1
+            time.sleep(0.5)
+        except Exception as e:
+            logger.warning(f"{source_name} error on page {page}: {e}")
+            break
+
+    logger.info(f"{source_name} done: {len(products)} products")
+    return products
+
+
+def scrape_gluesntools():
+    return _scrape_shopify("https://gluesntools.com.au", "gluesntools")
+
+
 # ---------------------------------------------------------------------------
 # Database operations
 # ---------------------------------------------------------------------------
@@ -352,6 +450,10 @@ SCRAPERS = {
     "kevmor": scrape_kevmor,
     "intafloors": scrape_intafloors,
     "gibbon": scrape_gibbon,
+    "marques": scrape_marques,
+    "floortrade": scrape_floortrade,
+    "gluesntools": scrape_gluesntools,
+    "homely": scrape_homely,
 }
 
 
