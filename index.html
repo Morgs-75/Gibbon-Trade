@@ -602,9 +602,9 @@ function renderComparisons(el, groups, keys) {
 
     for (const key of keys) {
         const meta = SUPPLIER_META[key];
-        headerHtml += `<th style="min-width:100px;color:${meta.color}">${meta.name}</th>`;
+        headerHtml += `<th style="min-width:100px;color:${meta.color};text-align:center">${meta.name}</th>`;
     }
-    headerHtml += '<th style="min-width:100px">Savings</th><th style="min-width:80px">Match</th>';
+    headerHtml += '<th style="min-width:100px;text-align:center">Savings</th><th style="min-width:80px;text-align:center">Match</th>';
 
     let html = `<div class="table-wrapper"><table><thead><tr>${headerHtml}</tr></thead><tbody>`;
 
@@ -669,7 +669,7 @@ function renderComparisons(el, groups, keys) {
             }
         }
 
-        html += `<td class="diff-cell">${savingsHtml}</td>`;
+        html += `<td class="diff-cell" style="text-align:center">${savingsHtml}</td>`;
         html += `<td style="text-align:center"><span class="match-score ${scoreClass}">${Math.round(g.score * 100)}%</span></td>`;
         html += `</tr>`;
     }
