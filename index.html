@@ -132,8 +132,18 @@
         .tab.active .badge { background: var(--accent); color: white; }
 
         /* Table styles */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; min-width: 900px; }
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+            position: relative;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1.5rem;
+        }
         th {
             background: var(--surface2); padding: 0.6rem 0.5rem;
             font-size: 0.72rem; text-transform: uppercase;
@@ -141,10 +151,17 @@
             text-align: left; position: sticky; top: 56px; z-index: 10;
         }
         td {
-            padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--border);
-            vertical-align: top; font-size: 0.85rem;
+            padding: 0.55rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 0.85rem;
         }
-        tr:hover td { background: rgba(59,130,246,0.04); }
+        tbody tr:hover td {
+            background: rgba(59,130,246,0.04);
+        }
+        tbody tr:hover td[style*="position:sticky"] {
+            background: rgba(59,130,246,0.08);
+        }
 
         .product-cell { display: flex; align-items: flex-start; gap: 0.6rem; }
         .product-img {
@@ -571,14 +588,15 @@ function renderComparisons(el, groups, keys) {
         return;
     }
 
-    // Build dynamic columns based on active suppliers
-    let headerHtml = '<th style="width:5%">#</th>';
+    // Build matrix-style header: # | Product | Supplier1 | Supplier2 | ... | Savings | Match
+    let headerHtml = '<th style="width:3%;min-width:30px">#</th>';
+    headerHtml += '<th style="width:25%;min-width:200px;position:sticky;left:0;background:var(--surface2);z-index:11">Product</th>';
+
     for (const key of keys) {
         const meta = SUPPLIER_META[key];
-        headerHtml += `<th style="color:${meta.color}">${meta.name} Product</th>`;
-        headerHtml += `<th style="width:10%;color:${meta.color}">Price</th>`;
+        headerHtml += `<th style="min-width:100px;color:${meta.color}">${meta.name}</th>`;
     }
-    headerHtml += '<th style="width:8%">Savings</th><th style="width:6%">Match</th>';
+    headerHtml += '<th style="min-width:100px">Savings</th><th style="min-width:80px">Match</th>';
 
     let html = `<div class="table-wrapper"><table><thead><tr>${headerHtml}</tr></thead><tbody>`;
 
@@ -608,8 +626,24 @@ function renderComparisons(el, groups, keys) {
 
         const scoreClass = g.score >= 0.7 ? 'score-high' : g.score >= 0.5 ? 'score-medium' : 'score-low';
 
-        html += `<tr><td style="color:var(--text-muted);font-size:0.75rem">${gi + 1}</td>`;
+        // Get a representative product for display (prefer one with image)
+        const displayProduct = g.products.find(p => p.image) || g.products[0];
 
+        html += `<tr>`;
+        html += `<td style="color:var(--text-muted);font-size:0.75rem">${gi + 1}</td>`;
+
+        // Product column (sticky left)
+        html += `<td style="position:sticky;left:0;background:var(--surface);z-index:1">
+            <div class="product-cell">
+                ${displayProduct.image ? `<img class="product-img" src="${escHtml(displayProduct.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                <div>
+                    <div class="product-name"><a href="${escHtml(displayProduct.url)}" target="_blank" rel="noopener">${escHtml(displayProduct.name)}</a></div>
+                    <div class="product-category">${escHtml(displayProduct.category || '')}</div>
+                </div>
+            </div>
+        </td>`;
+
+        // Price columns for each supplier
         for (const key of keys) {
             const p = bySupplier[key];
             if (p) {
@@ -617,23 +651,18 @@ function renderComparisons(el, groups, keys) {
                 const isWorst = p.price && worstPrice && p.price === worstPrice && prices.length > 1 && bestPrice < worstPrice;
                 const priceClass = isBest ? 'price-cheaper' : isWorst ? 'price-dearer' : '';
 
-                html += `<td>
-                    <div class="product-cell">
-                        ${p.image ? `<img class="product-img" src="${escHtml(p.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
-                        <div>
-                            <div class="product-name"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a></div>
-                            <div class="product-category">${escHtml(p.category || '')}</div>
-                        </div>
-                    </div>
-                </td>`;
-                html += `<td><span class="price ${priceClass}">${p.price ? '$' + p.price.toFixed(2) : '<span class="price-na">' + escHtml(p.price_display || 'N/A') + '</span>'}</span></td>`;
+                if (p.price) {
+                    html += `<td style="text-align:center"><a href="${escHtml(p.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="price ${priceClass}">$${p.price.toFixed(2)}</span></a></td>`;
+                } else {
+                    html += `<td style="text-align:center"><span class="price-na">${escHtml(p.price_display || 'N/A')}</span></td>`;
+                }
             } else {
-                html += `<td><span class="price-na" style="font-size:0.78rem">Not listed</span></td><td>-</td>`;
+                html += `<td style="text-align:center"><span class="price-na" style="font-size:0.78rem">-</span></td>`;
             }
         }
 
         html += `<td class="diff-cell">${savingsHtml}</td>`;
-        html += `<td><span class="match-score ${scoreClass}">${Math.round(g.score * 100)}%</span></td>`;
+        html += `<td style="text-align:center"><span class="match-score ${scoreClass}">${Math.round(g.score * 100)}%</span></td>`;
         html += `</tr>`;
     }
 
