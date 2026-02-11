@@ -112,7 +112,9 @@
         /* Section headers */
         .section-title {
             font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 0.75rem;
-            padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+            padding-bottom: 0.4rem; padding-top: 1rem;
+            border-bottom: 1px solid var(--border);
+            scroll-margin-top: 80px;
         }
 
         /* Strengths / Weaknesses */
@@ -144,7 +146,9 @@
 
         /* Gap table controls */
         .gap-controls {
-            display: flex; gap: 0.6rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center;
+            display: flex; gap: 0.6rem;
+            margin-bottom: 1rem; margin-top: 1rem;
+            flex-wrap: wrap; align-items: center;
         }
         input[type="text"], select {
             background: var(--surface2); border: 1px solid var(--border);
@@ -157,14 +161,29 @@
         .gap-count { font-size: 0.82rem; color: var(--text-muted); margin-left: auto; }
 
         /* Table styles */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; }
+        .table-wrapper {
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            margin-top: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1.5rem;
+        }
         th {
-            background: var(--surface2); padding: 0.6rem 0.5rem;
-            font-size: 0.72rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--text-muted);
-            text-align: left; position: sticky; top: 56px; z-index: 10;
-            cursor: pointer; user-select: none;
+            background: var(--surface2);
+            padding: 0.6rem 0.5rem;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            text-align: left;
+            position: sticky;
+            top: 70px;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
         }
         th:hover { color: var(--text); }
         th .sort-arrow { font-size: 0.6rem; margin-left: 0.3rem; }
