@@ -124,6 +124,7 @@
         .sw-panel {
             background: var(--surface); border: 1px solid var(--border);
             border-radius: 10px; padding: 1rem;
+            max-height: 600px; overflow-y: auto;
         }
         .sw-panel h3 {
             font-size: 0.9rem; font-weight: 700; margin-bottom: 0.6rem;
@@ -604,10 +605,10 @@ function renderPage() {
 
     // Strengths panel
     html += '<div class="sw-panel"><h3><span style="color:var(--green)">&#9650;</span> Strengths</h3><ul>';
-    for (const c of insights.strongCats.slice(0, 8)) {
+    for (const c of insights.strongCats) {
         html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-good">${c.gibbon} vs ${c.competitor}</span></li>`;
     }
-    for (const p of insights.priceAdvantages.slice(0, 8)) {
+    for (const p of insights.priceAdvantages) {
         html += `<li><span style="font-size:0.78rem">${escHtml(truncate(p.name, 50))}</span>
             <span class="sw-badge sw-badge-good">$${p.saving.toFixed(2)} cheaper</span></li>`;
     }
@@ -621,13 +622,13 @@ function renderPage() {
 
     // Weaknesses panel
     html += '<div class="sw-panel"><h3><span style="color:var(--red)">&#9660;</span> Weaknesses</h3><ul>';
-    for (const c of insights.zeroCats.slice(0, 6)) {
+    for (const c of insights.zeroCats) {
         html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-bad">0 products (${c.competitorTotal} competitor)</span></li>`;
     }
-    for (const c of insights.weakCats.slice(0, 6)) {
+    for (const c of insights.weakCats) {
         html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-warn">${c.gibbon} vs ${c.competitor}</span></li>`;
     }
-    for (const p of insights.priceDisadvantages.slice(0, 6)) {
+    for (const p of insights.priceDisadvantages) {
         html += `<li><span style="font-size:0.78rem">${escHtml(truncate(p.name, 50))}</span>
             <span class="sw-badge sw-badge-bad">$${p.diff.toFixed(2)} more expensive</span></li>`;
     }
