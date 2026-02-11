@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Pricing - No Haggling, No Quotes | Gibbon Trade</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --kevmor: #f97316;
+            --intafloors: #06b6d4;
+            --gibbon: #22c55e;
+            --marques: #a855f7;
+            --floortrade: #ec4899;
+            --gluesntools: #eab308;
+            --homely: #14b8a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .container { max-width: 1500px; margin: 0 auto; padding: 0 1rem; }
+
+        /* Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--green), var(--accent));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; color: white;
+        }
+        h1 { font-size: 1.2rem; font-weight: 700; }
+        h1 .subtitle { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; display: block; line-height: 1.1; }
+
+        .nav-link {
+            color: var(--text-muted); text-decoration: none; font-size: 0.85rem;
+            padding: 0.4rem 0.7rem; border-radius: 6px;
+            border: 1px solid var(--border); transition: all 0.15s;
+        }
+        .nav-link:hover { color: var(--text); border-color: var(--accent); }
+
+        /* Hero banner */
+        .hero {
+            background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(59,130,246,0.15));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--green);
+        }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
+            background: var(--surface);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        .stat { text-align: center; flex: 1; min-width: 100px; }
+        .stat-value { font-size: 1.3rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 0.6rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        input[type="text"], select {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.45rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        input[type="text"]:focus, select:focus { border-color: var(--accent); }
+        input[type="text"] { width: 240px; }
+        select { min-width: 180px; }
+        .result-count {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* Supplier toggles */
+        .supplier-toggles {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+        .supplier-toggle {
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .supplier-toggle.active { opacity: 1; }
+        .supplier-toggle:not(.active) { opacity: 0.4; }
+        .toggle-kevmor { background: rgba(249,115,22,0.15); color: var(--kevmor); border-color: var(--kevmor); }
+        .toggle-intafloors { background: rgba(6,182,212,0.15); color: var(--intafloors); border-color: var(--intafloors); }
+        .toggle-gibbon { background: rgba(34,197,94,0.15); color: var(--gibbon); border-color: var(--gibbon); }
+        .toggle-marques { background: rgba(168,85,247,0.15); color: var(--marques); border-color: var(--marques); }
+        .toggle-floortrade { background: rgba(236,72,153,0.15); color: var(--floortrade); border-color: var(--floortrade); }
+        .toggle-gluesntools { background: rgba(234,179,8,0.15); color: var(--gluesntools); border-color: var(--gluesntools); }
+        .toggle-homely { background: rgba(20,184,166,0.15); color: var(--homely); border-color: var(--homely); }
+
+        /* Sort buttons */
+        .sort-buttons {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .sort-btn {
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .sort-btn:hover { color: var(--text); border-color: var(--accent); }
+        .sort-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(59,130,246,0.1); }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            gap: 0.75rem;
+            color: var(--text-muted);
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Table styles */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1.5rem;
+        }
+        th {
+            background: var(--surface2);
+            padding: 0.6rem 0.5rem;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            text-align: left;
+            position: sticky;
+            top: 56px;
+            z-index: 10;
+        }
+        td {
+            padding: 0.55rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+            font-size: 0.85rem;
+        }
+        tr:hover td { background: rgba(59,130,246,0.04); }
+
+        .product-cell {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+        .product-img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: white;
+            flex-shrink: 0;
+        }
+        .product-name {
+            font-weight: 600;
+            font-size: 0.82rem;
+            line-height: 1.3;
+        }
+        .product-name a {
+            color: var(--text);
+            text-decoration: none;
+        }
+        .product-name a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        .product-category {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .price {
+            font-weight: 700;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            color: var(--green);
+        }
+
+        .source-tag {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .source-kevmor { background: rgba(249,115,22,0.2); color: var(--kevmor); }
+        .source-intafloors { background: rgba(6,182,212,0.2); color: var(--intafloors); }
+        .source-gibbon { background: rgba(34,197,94,0.2); color: var(--gibbon); }
+        .source-marques { background: rgba(168,85,247,0.2); color: var(--marques); }
+        .source-floortrade { background: rgba(236,72,153,0.2); color: var(--floortrade); }
+        .source-gluesntools { background: rgba(234,179,8,0.2); color: var(--gluesntools); }
+        .source-homely { background: rgba(20,184,166,0.2); color: var(--homely); }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+        }
+        .empty-state h2 {
+            font-size: 1.15rem;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        @media (max-width: 768px) {
+            .controls { width: 100%; }
+            input[type="text"] { width: 100%; flex: 1; }
+            .product-img { width: 36px; height: 36px; }
+            th, td { padding: 0.4rem 0.3rem; font-size: 0.78rem; }
+            .hero h2 { font-size: 1.1rem; }
+            .hero p { font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">GT</div>
+            <h1>Fixed Pricing<span class="subtitle">No Haggling, No Quotes Required</span></h1>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            <a href="insights.html" class="nav-link">📊 Insights</a>
+            <a href="index.html" class="nav-link">&larr; Back to Comparison</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="hero">
+        <h2>💰 Transparent Fixed Pricing</h2>
+        <p>Browse products with clear, upfront pricing. No need to call for quotes or haggle—what you see is what you pay.</p>
+    </div>
+
+    <div class="stats-bar" id="stats-bar" style="display:none;"></div>
+
+    <div class="controls">
+        <div class="supplier-toggles" id="supplier-toggles"></div>
+        <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
+        <select id="category-filter" onchange="renderProducts()">
+            <option value="">All Categories</option>
+        </select>
+        <div class="sort-buttons">
+            <button class="sort-btn active" data-sort="name" onclick="setSort('name')">Name</button>
+            <button class="sort-btn" data-sort="price-asc" onclick="setSort('price-asc')">Price ↑</button>
+            <button class="sort-btn" data-sort="price-desc" onclick="setSort('price-desc')">Price ↓</button>
+        </div>
+        <span class="result-count" id="result-count"></span>
+    </div>
+
+    <div id="content">
+        <div class="loading"><div class="spinner"></div>Loading fixed-price products...</div>
+    </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Supabase config
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
+
+const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+};
+
+async function sbFetch(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const SUPPLIER_META = {
+    kevmor: { name: 'Kevmor', color: '#f97316', cssClass: 'source-kevmor' },
+    intafloors: { name: 'Intafloors', color: '#06b6d4', cssClass: 'source-intafloors' },
+    gibbon: { name: 'Gibbon Trade', color: '#22c55e', cssClass: 'source-gibbon' },
+    marques: { name: 'Marques', color: '#a855f7', cssClass: 'source-marques' },
+    floortrade: { name: 'Floor Trade', color: '#ec4899', cssClass: 'source-floortrade' },
+    gluesntools: { name: 'Glues N Tools', color: '#eab308', cssClass: 'source-gluesntools' },
+    homely: { name: 'Homely', color: '#14b8a6', cssClass: 'source-homely' },
+};
+
+let allProducts = [];
+let activeSuppliers = new Set();
+let currentSort = 'name';
+let debounceTimer = null;
+
+// ---------------------------------------------------------------------------
+// Load data
+// ---------------------------------------------------------------------------
+async function loadData() {
+    try {
+        const products = await sbFetch('products?select=*&order=name.asc');
+
+        // Filter only products with actual numeric prices
+        allProducts = products
+            .filter(p => p.price && parseFloat(p.price) > 0)
+            .map(p => ({
+                name: p.name,
+                price: parseFloat(p.price),
+                price_display: p.price_display || `$${parseFloat(p.price).toFixed(2)} GST excl.`,
+                url: p.url || '',
+                image: p.image || '',
+                category: p.category || 'Uncategorised',
+                sku: p.sku || '',
+                source: p.source,
+            }));
+
+        // Initialize active suppliers with all that have fixed-price products
+        const suppliersWithProducts = new Set(allProducts.map(p => p.source));
+        activeSuppliers = new Set([...suppliersWithProducts]);
+
+        renderSupplierToggles();
+        renderStats();
+        renderCategories();
+        renderProducts();
+    } catch (e) {
+        console.error('Supabase load error:', e);
+        // Fallback to data.json
+        try {
+            const res = await fetch('data.json');
+            const data = await res.json();
+
+            // Convert data.json format to flat product list
+            allProducts = [];
+            for (const [source, supplierData] of Object.entries(data.suppliers)) {
+                for (const p of supplierData.products) {
+                    if (p.price && p.price > 0) {
+                        allProducts.push({
+                            ...p,
+                            source,
+                        });
+                    }
+                }
+            }
+
+            const suppliersWithProducts = new Set(allProducts.map(p => p.source));
+            activeSuppliers = new Set([...suppliersWithProducts]);
+
+            renderSupplierToggles();
+            renderStats();
+            renderCategories();
+            renderProducts();
+        } catch (e2) {
+            document.getElementById('content').innerHTML =
+                `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p></div>`;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UI helpers
+// ---------------------------------------------------------------------------
+function escHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}
+
+function renderSupplierToggles() {
+    const el = document.getElementById('supplier-toggles');
+    const suppliers = [...new Set(allProducts.map(p => p.source))].sort();
+
+    let html = '';
+    for (const source of suppliers) {
+        const meta = SUPPLIER_META[source];
+        if (!meta) continue;
+        const isActive = activeSuppliers.has(source);
+        html += `<div class="supplier-toggle toggle-${source} ${isActive ? 'active' : ''}"
+                      data-supplier="${source}"
+                      onclick="toggleSupplier('${source}')">
+            ${meta.name}
+        </div>`;
+    }
+    el.innerHTML = html;
+}
+
+function toggleSupplier(source) {
+    if (activeSuppliers.has(source)) {
+        if (activeSuppliers.size <= 1) return; // Must have at least 1
+        activeSuppliers.delete(source);
+    } else {
+        activeSuppliers.add(source);
+    }
+
+    const toggle = document.querySelector(`.supplier-toggle[data-supplier="${source}"]`);
+    toggle.classList.toggle('active', activeSuppliers.has(source));
+
+    renderStats();
+    renderProducts();
+}
+
+function renderStats() {
+    const filtered = allProducts.filter(p => activeSuppliers.has(p.source));
+    const bySupplier = {};
+
+    for (const p of filtered) {
+        if (!bySupplier[p.source]) bySupplier[p.source] = 0;
+        bySupplier[p.source]++;
+    }
+
+    const statsBar = document.getElementById('stats-bar');
+    statsBar.style.display = 'flex';
+
+    let html = '';
+    for (const [source, count] of Object.entries(bySupplier)) {
+        const meta = SUPPLIER_META[source];
+        if (!meta) continue;
+        html += `<div class="stat">
+            <div class="stat-value" style="color:${meta.color}">${count}</div>
+            <div class="stat-label">${meta.name}</div>
+        </div>`;
+    }
+
+    html += `<div class="stat">
+        <div class="stat-value" style="color:var(--green)">${filtered.length}</div>
+        <div class="stat-label">Total Fixed Price</div>
+    </div>`;
+
+    statsBar.innerHTML = html;
+}
+
+function renderCategories() {
+    const categories = [...new Set(allProducts.map(p => p.category))].sort();
+    const select = document.getElementById('category-filter');
+
+    let html = '<option value="">All Categories</option>';
+    for (const cat of categories) {
+        html += `<option value="${escHtml(cat)}">${escHtml(cat)}</option>`;
+    }
+    select.innerHTML = html;
+}
+
+function getFilteredProducts() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const category = document.getElementById('category-filter').value;
+
+    let filtered = allProducts.filter(p => activeSuppliers.has(p.source));
+
+    if (search) {
+        filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes(search) ||
+            p.category.toLowerCase().includes(search)
+        );
+    }
+
+    if (category) {
+        filtered = filtered.filter(p => p.category === category);
+    }
+
+    // Sort
+    filtered = [...filtered];
+    if (currentSort === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (currentSort === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+    } else if (currentSort === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+    }
+
+    return filtered;
+}
+
+function setSort(sort) {
+    currentSort = sort;
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sort === sort);
+    });
+    renderProducts();
+}
+
+function debounceRender() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(renderProducts, 250);
+}
+
+function renderProducts() {
+    const el = document.getElementById('content');
+    const products = getFilteredProducts();
+
+    document.getElementById('result-count').textContent =
+        `${products.length} product${products.length === 1 ? '' : 's'}`;
+
+    if (!products.length) {
+        el.innerHTML = `<div class="empty-state">
+            <h2>No Products Found</h2>
+            <p>Try adjusting your filters or selecting different suppliers.</p>
+        </div>`;
+        return;
+    }
+
+    let html = `<div class="table-wrapper"><table>
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th style="width:45%">Product</th>
+                <th style="width:12%">Fixed Price</th>
+                <th style="width:20%">Category</th>
+                <th style="width:13%">Supplier</th>
+                <th style="width:5%">Link</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+        const meta = SUPPLIER_META[p.source] || { name: p.source, cssClass: '' };
+
+        html += `<tr>
+            <td style="color:var(--text-muted);font-size:0.75rem">${i + 1}</td>
+            <td>
+                <div class="product-cell">
+                    ${p.image ? `<img class="product-img" src="${escHtml(p.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                    <div>
+                        <div class="product-name">
+                            ${p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a>` : escHtml(p.name)}
+                        </div>
+                        ${p.sku ? `<div class="product-category">SKU: ${escHtml(p.sku)}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td><span class="price">$${p.price.toFixed(2)}</span></td>
+            <td class="product-category">${escHtml(p.category)}</td>
+            <td><span class="source-tag ${meta.cssClass}">${escHtml(meta.name)}</span></td>
+            <td>${p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:0.78rem">View</a>` : '-'}</td>
+        </tr>`;
+    }
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+loadData();
+</script>
+</body>
+</html>

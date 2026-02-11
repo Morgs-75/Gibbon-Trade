@@ -4,6 +4,16 @@
 [functions]
   directory = "netlify/functions"
 
+[[redirects]]
+  from = "/fixed"
+  to = "/fixed.html"
+  status = 200
+
+[[redirects]]
+  from = "/insights"
+  to = "/insights.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

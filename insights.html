@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gibbon Insights - Gap Analysis & Market Position</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --kevmor: #f97316;
+            --intafloors: #06b6d4;
+            --gibbon: #22c55e;
+            --marques: #a855f7;
+            --floortrade: #ec4899;
+            --gluesntools: #eab308;
+            --homely: #14b8a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .container { max-width: 1500px; margin: 0 auto; padding: 0 1rem; }
+
+        /* Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--green));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; color: white;
+        }
+        h1 { font-size: 1.2rem; font-weight: 700; }
+        h1 .subtitle { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; display: block; line-height: 1.1; }
+
+        .nav-link {
+            color: var(--text-muted); text-decoration: none; font-size: 0.85rem;
+            padding: 0.4rem 0.7rem; border-radius: 6px;
+            border: 1px solid var(--border); transition: all 0.15s;
+        }
+        .nav-link:hover { color: var(--text); border-color: var(--accent); }
+
+        /* Loading */
+        .loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 4rem; gap: 0.75rem; color: var(--text-muted);
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--accent); border-top-color: transparent;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Summary Cards */
+        .dashboard {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem; margin: 1rem 0;
+        }
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1rem;
+        }
+        .card-value { font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
+        .card-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem; }
+        .card-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+        /* Section headers */
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 0.75rem;
+            padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+        }
+
+        /* Strengths / Weaknesses */
+        .sw-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .sw-panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1rem;
+        }
+        .sw-panel h3 {
+            font-size: 0.9rem; font-weight: 700; margin-bottom: 0.6rem;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .sw-panel ul { list-style: none; }
+        .sw-panel li {
+            font-size: 0.82rem; padding: 0.35rem 0;
+            border-bottom: 1px solid rgba(71,85,105,0.4);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sw-panel li:last-child { border-bottom: none; }
+        .sw-badge {
+            font-size: 0.7rem; font-weight: 600; padding: 0.1rem 0.4rem;
+            border-radius: 3px; white-space: nowrap;
+        }
+        .sw-badge-good { background: rgba(34,197,94,0.2); color: var(--green); }
+        .sw-badge-bad { background: rgba(239,68,68,0.2); color: var(--red); }
+        .sw-badge-warn { background: rgba(245,158,11,0.2); color: var(--orange); }
+
+        /* Gap table controls */
+        .gap-controls {
+            display: flex; gap: 0.6rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center;
+        }
+        input[type="text"], select {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.45rem 0.7rem;
+            border-radius: 6px; font-size: 0.85rem; outline: none;
+        }
+        input[type="text"]:focus, select:focus { border-color: var(--accent); }
+        input[type="text"] { width: 240px; }
+        select { min-width: 180px; }
+        .gap-count { font-size: 0.82rem; color: var(--text-muted); margin-left: auto; }
+
+        /* Table styles */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1.5rem; }
+        th {
+            background: var(--surface2); padding: 0.6rem 0.5rem;
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted);
+            text-align: left; position: sticky; top: 56px; z-index: 10;
+            cursor: pointer; user-select: none;
+        }
+        th:hover { color: var(--text); }
+        th .sort-arrow { font-size: 0.6rem; margin-left: 0.3rem; }
+        td {
+            padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--border);
+            vertical-align: top; font-size: 0.85rem;
+        }
+        tr:hover td { background: rgba(59,130,246,0.04); }
+
+        .product-name { font-weight: 600; font-size: 0.82rem; line-height: 1.3; }
+        .product-name a { color: var(--text); text-decoration: none; }
+        .product-name a:hover { color: var(--accent); text-decoration: underline; }
+        .product-category { font-size: 0.72rem; color: var(--text-muted); }
+
+        .price { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+        .price-na { color: var(--text-muted); font-weight: 400; font-size: 0.78rem; }
+
+        .source-tag {
+            display: inline-block; padding: 0.1rem 0.4rem;
+            border-radius: 3px; font-size: 0.68rem; font-weight: 600;
+            text-transform: uppercase;
+        }
+        .source-kevmor { background: rgba(249,115,22,0.2); color: var(--kevmor); }
+        .source-intafloors { background: rgba(6,182,212,0.2); color: var(--intafloors); }
+        .source-gibbon { background: rgba(34,197,94,0.2); color: var(--gibbon); }
+        .source-marques { background: rgba(168,85,247,0.2); color: var(--marques); }
+        .source-floortrade { background: rgba(236,72,153,0.2); color: var(--floortrade); }
+        .source-gluesntools { background: rgba(234,179,8,0.2); color: var(--gluesntools); }
+        .source-homely { background: rgba(20,184,166,0.2); color: var(--homely); }
+
+        .empty-state {
+            text-align: center; padding: 3rem 2rem; color: var(--text-muted);
+        }
+        .empty-state h2 { font-size: 1.15rem; margin-bottom: 0.4rem; color: var(--text); }
+
+        @media (max-width: 768px) {
+            .sw-grid { grid-template-columns: 1fr; }
+            .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            input[type="text"] { width: 100%; flex: 1; }
+            th, td { padding: 0.4rem 0.3rem; font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">GT</div>
+            <h1>Gibbon Insights<span class="subtitle">Gap Analysis &amp; Market Position</span></h1>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            <a href="fixed.html" class="nav-link">💰 Fixed Pricing</a>
+            <a href="index.html" class="nav-link">&larr; Back to Comparison</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div id="content">
+        <div class="loading"><div class="spinner"></div>Loading product data &amp; analyzing gaps...</div>
+    </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Reused: Supabase config
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
+const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+};
+async function sbFetch(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Reused: Supplier meta
+// ---------------------------------------------------------------------------
+const SUPPLIER_META = {
+    kevmor:     { name: 'Kevmor',       color: '#f97316', cssClass: 'source-kevmor' },
+    intafloors: { name: 'Intafloors',   color: '#06b6d4', cssClass: 'source-intafloors' },
+    gibbon:     { name: 'Gibbon Trade', color: '#22c55e', cssClass: 'source-gibbon' },
+    marques:    { name: 'Marques',      color: '#a855f7', cssClass: 'source-marques' },
+    floortrade: { name: 'Floor Trade',  color: '#ec4899', cssClass: 'source-floortrade' },
+    gluesntools:{ name: 'Glues N Tools',color: '#eab308', cssClass: 'source-gluesntools' },
+    homely:     { name: 'Homely',       color: '#14b8a6', cssClass: 'source-homely' },
+};
+
+// ---------------------------------------------------------------------------
+// Reused: Matching logic
+// ---------------------------------------------------------------------------
+const STOP_WORDS = new Set([
+    'the','a','an','and','or','for','of','in','with','to','is','by','at','on',
+    'all','new','free','per','mm','kg','ltr','litre','ml','pack','set','each',
+    'pair','x','gst','excl','inc',
+]);
+
+function normalize(name) {
+    name = name.toLowerCase().trim();
+    name = name.replace(/[®™©�\u0000-\u001f]/g, '');
+    name = name.replace(/\s*\(.*?\)\s*/g, ' ');
+    for (const sep of [' - ', ' – ', ' — ']) {
+        const i = name.indexOf(sep);
+        if (i > 10) name = name.substring(0, i);
+    }
+    return name.replace(/\s+/g, ' ').trim();
+}
+
+function tokenize(name) {
+    const norm = normalize(name);
+    const tokens = new Set(norm.match(/[a-z0-9]+/g) || []);
+    STOP_WORDS.forEach(w => tokens.delete(w));
+    return tokens;
+}
+
+function similarity(name1, name2) {
+    const t1 = tokenize(name1);
+    const t2 = tokenize(name2);
+    if (!t1.size || !t2.size) return 0;
+    let intersection = 0;
+    t1.forEach(t => { if (t2.has(t)) intersection++; });
+    const union = new Set([...t1, ...t2]).size;
+    return intersection / union;
+}
+
+function escHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}
+
+// ---------------------------------------------------------------------------
+// Gap analysis state
+// ---------------------------------------------------------------------------
+const GAP_THRESHOLD = 0.35;
+let DATA = null;
+let gapProducts = [];
+let insights = null;
+let gapSortCol = 'name';
+let gapSortAsc = true;
+
+// ---------------------------------------------------------------------------
+// Load data
+// ---------------------------------------------------------------------------
+async function loadData() {
+    try {
+        const [products, logs] = await Promise.all([
+            sbFetch('products?select=*&order=name.asc'),
+            sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
+        ]);
+
+        const bySource = {};
+        for (const p of products) {
+            if (!bySource[p.source]) bySource[p.source] = [];
+            bySource[p.source].push({
+                name: p.name,
+                price: p.price ? parseFloat(p.price) : null,
+                price_display: p.price_display || (p.price ? `$${parseFloat(p.price).toFixed(2)} GST excl.` : 'Contact for Price'),
+                url: p.url || '',
+                image: p.image || '',
+                category: p.category || '',
+                sku: p.sku || '',
+            });
+        }
+
+        const sourceToKey = { kevmor:'kevmor', intafloors:'intafloors', gibbon:'gibbon', marques:'marques', floortrade:'floortrade', gluesntools:'gluesntools', homely:'homely' };
+        const suppliers = {};
+        for (const [src, prods] of Object.entries(bySource)) {
+            const key = sourceToKey[src] || src;
+            suppliers[key] = { products: prods };
+        }
+
+        DATA = { suppliers };
+        runAnalysis();
+    } catch (e) {
+        console.error('Load error:', e);
+        try {
+            const res = await fetch('data.json');
+            DATA = await res.json();
+            runAnalysis();
+        } catch (e2) {
+            document.getElementById('content').innerHTML =
+                `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p></div>`;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Core analysis
+// ---------------------------------------------------------------------------
+function runAnalysis() {
+    const gibbon = (DATA.suppliers.gibbon || { products: [] }).products;
+    const kevmor = (DATA.suppliers.kevmor || { products: [] }).products;
+    const intafloors = (DATA.suppliers.intafloors || { products: [] }).products;
+
+    // Pre-tokenize Gibbon products for performance
+    const gibbonTokenized = gibbon.map(p => ({ ...p, _tokens: tokenize(p.name) }));
+
+    // Find gap products: competitor products with no Gibbon match
+    gapProducts = [];
+    const competitors = [
+        ...kevmor.map(p => ({ ...p, _supplier: 'kevmor' })),
+        ...intafloors.map(p => ({ ...p, _supplier: 'intafloors' })),
+    ];
+
+    for (const cp of competitors) {
+        const cpTokens = tokenize(cp.name);
+        let maxSim = 0;
+        for (const gp of gibbonTokenized) {
+            if (!cpTokens.size || !gp._tokens.size) continue;
+            let intersection = 0;
+            cpTokens.forEach(t => { if (gp._tokens.has(t)) intersection++; });
+            const union = new Set([...cpTokens, ...gp._tokens]).size;
+            const sim = intersection / union;
+            if (sim > maxSim) maxSim = sim;
+            if (maxSim >= GAP_THRESHOLD) break; // Early exit — it's matched
+        }
+        if (maxSim < GAP_THRESHOLD) {
+            gapProducts.push({ ...cp, _maxSim: maxSim });
+        }
+    }
+
+    // Price competitiveness on matched products
+    // Use greedy matching across gibbon + kevmor + intafloors
+    const allForMatch = [
+        ...gibbon.map(p => ({ ...p, _supplier: 'gibbon' })),
+        ...kevmor.map(p => ({ ...p, _supplier: 'kevmor' })),
+        ...intafloors.map(p => ({ ...p, _supplier: 'intafloors' })),
+    ];
+
+    const used = new Set();
+    const matchGroups = [];
+
+    for (let i = 0; i < allForMatch.length; i++) {
+        if (used.has(i)) continue;
+        const group = [{ idx: i, product: allForMatch[i] }];
+        used.add(i);
+
+        for (let j = i + 1; j < allForMatch.length; j++) {
+            if (used.has(j)) continue;
+            if (allForMatch[j]._supplier === allForMatch[i]._supplier) continue;
+            const score = similarity(allForMatch[i].name, allForMatch[j].name);
+            if (score >= 0.40) {
+                let ok = true;
+                for (const m of group) {
+                    if (allForMatch[j]._supplier === m.product._supplier) { ok = false; break; }
+                }
+                if (ok) { group.push({ idx: j, product: allForMatch[j] }); used.add(j); }
+            }
+        }
+        if (group.length > 1) {
+            matchGroups.push(group.map(g => g.product));
+        }
+    }
+
+    // Calculate price stats
+    let gibbonCheapest = 0, gibbonExpensive = 0, gibbonMiddle = 0, totalPriced = 0;
+    const priceAdvantages = []; // { name, gibbonPrice, bestOtherPrice, saving }
+    const priceDisadvantages = [];
+
+    for (const group of matchGroups) {
+        const gibbonP = group.find(p => p._supplier === 'gibbon');
+        if (!gibbonP || !gibbonP.price) continue;
+        const others = group.filter(p => p._supplier !== 'gibbon' && p.price);
+        if (!others.length) continue;
+
+        totalPriced++;
+        const otherPrices = others.map(p => p.price);
+        const minOther = Math.min(...otherPrices);
+        const maxOther = Math.max(...otherPrices);
+
+        if (gibbonP.price <= minOther) {
+            gibbonCheapest++;
+            if (minOther - gibbonP.price > 0.50) {
+                priceAdvantages.push({
+                    name: gibbonP.name,
+                    gibbonPrice: gibbonP.price,
+                    otherPrice: minOther,
+                    saving: minOther - gibbonP.price,
+                });
+            }
+        } else if (gibbonP.price >= maxOther) {
+            gibbonExpensive++;
+            if (gibbonP.price - maxOther > 0.50) {
+                priceDisadvantages.push({
+                    name: gibbonP.name,
+                    gibbonPrice: gibbonP.price,
+                    otherPrice: maxOther,
+                    diff: gibbonP.price - maxOther,
+                });
+            }
+        } else {
+            gibbonMiddle++;
+        }
+    }
+    priceAdvantages.sort((a, b) => b.saving - a.saving);
+    priceDisadvantages.sort((a, b) => b.diff - a.diff);
+
+    // Category analysis
+    const catMap = {}; // category → { gibbon: n, kevmor: n, intafloors: n }
+    for (const p of gibbon) {
+        const cat = p.category || 'Uncategorised';
+        if (!catMap[cat]) catMap[cat] = { gibbon: 0, kevmor: 0, intafloors: 0 };
+        catMap[cat].gibbon++;
+    }
+    for (const p of kevmor) {
+        const cat = p.category || 'Uncategorised';
+        if (!catMap[cat]) catMap[cat] = { gibbon: 0, kevmor: 0, intafloors: 0 };
+        catMap[cat].kevmor++;
+    }
+    for (const p of intafloors) {
+        const cat = p.category || 'Uncategorised';
+        if (!catMap[cat]) catMap[cat] = { gibbon: 0, kevmor: 0, intafloors: 0 };
+        catMap[cat].intafloors++;
+    }
+
+    const zeroCats = [];
+    const weakCats = [];
+    const strongCats = [];
+
+    for (const [cat, counts] of Object.entries(catMap)) {
+        const competitorTotal = counts.kevmor + counts.intafloors;
+        if (competitorTotal === 0) continue; // Only Gibbon has this category
+        if (counts.gibbon === 0) {
+            zeroCats.push({ cat, competitorTotal });
+        } else {
+            const ratio = counts.gibbon / competitorTotal;
+            if (ratio < 0.25) weakCats.push({ cat, gibbon: counts.gibbon, competitor: competitorTotal, ratio });
+            else if (ratio >= 0.5) strongCats.push({ cat, gibbon: counts.gibbon, competitor: competitorTotal, ratio });
+        }
+    }
+    zeroCats.sort((a, b) => b.competitorTotal - a.competitorTotal);
+    weakCats.sort((a, b) => a.ratio - b.ratio);
+    strongCats.sort((a, b) => b.ratio - a.ratio);
+
+    // Unique Gibbon products (not matched to any competitor)
+    let gibbonUnique = 0;
+    for (const gp of gibbonTokenized) {
+        let maxSim = 0;
+        for (const cp of competitors) {
+            const sim = similarity(gp.name, cp.name);
+            if (sim >= GAP_THRESHOLD) { maxSim = sim; break; }
+            if (sim > maxSim) maxSim = sim;
+        }
+        if (maxSim < GAP_THRESHOLD) gibbonUnique++;
+    }
+
+    // Coverage calculations
+    const kevmorGap = gapProducts.filter(p => p._supplier === 'kevmor').length;
+    const intaGap = gapProducts.filter(p => p._supplier === 'intafloors').length;
+    const kevmorCovered = kevmor.length - kevmorGap;
+    const intaCovered = intafloors.length - intaGap;
+
+    insights = {
+        gibbonCount: gibbon.length,
+        kevmorCount: kevmor.length,
+        intaCount: intafloors.length,
+        kevmorCovered,
+        kevmorGap,
+        kevmorCovPct: kevmor.length ? ((kevmorCovered / kevmor.length) * 100).toFixed(1) : '0',
+        intaCovered,
+        intaGap,
+        intaCovPct: intafloors.length ? ((intaCovered / intafloors.length) * 100).toFixed(1) : '0',
+        totalGaps: gapProducts.length,
+        zeroCats,
+        weakCats,
+        strongCats,
+        gibbonCheapest,
+        gibbonExpensive,
+        gibbonMiddle,
+        totalPriced,
+        priceAdvantages,
+        priceDisadvantages,
+        gibbonUnique,
+    };
+
+    renderPage();
+}
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
+function renderPage() {
+    const el = document.getElementById('content');
+    let html = '';
+
+    // --- Section 1: Summary Dashboard ---
+    html += '<div class="dashboard">';
+    html += card(insights.gibbonCount, 'Gibbon Products', '', 'var(--gibbon)');
+    html += card(insights.kevmorCount, 'Kevmor Products', '', 'var(--kevmor)');
+    html += card(insights.intaCount, 'Intafloors Products', '', 'var(--intafloors)');
+    html += card(`${insights.kevmorCovPct}%`, 'Kevmor Coverage',
+        `${insights.kevmorCovered} matched / ${insights.kevmorGap} gaps`, 'var(--kevmor)');
+    html += card(`${insights.intaCovPct}%`, 'Intafloors Coverage',
+        `${insights.intaCovered} matched / ${insights.intaGap} gaps`, 'var(--intafloors)');
+    html += card(insights.totalGaps, 'Total Gap Products', 'Competitor products Gibbon is missing', 'var(--red)');
+
+    if (insights.totalPriced) {
+        const cheapPct = ((insights.gibbonCheapest / insights.totalPriced) * 100).toFixed(0);
+        const expPct = ((insights.gibbonExpensive / insights.totalPriced) * 100).toFixed(0);
+        html += card(`${cheapPct}%`, 'Gibbon Cheapest',
+            `${insights.gibbonCheapest} of ${insights.totalPriced} compared`, 'var(--green)');
+        html += card(`${expPct}%`, 'Gibbon Most Expensive',
+            `${insights.gibbonExpensive} of ${insights.totalPriced} compared`, 'var(--red)');
+    }
+    html += card(insights.zeroCats.length, 'Empty Categories', 'Categories with zero Gibbon products', 'var(--orange)');
+    html += card(insights.gibbonUnique, 'Gibbon Unique', 'Products only Gibbon sells', 'var(--accent)');
+    html += '</div>';
+
+    // --- Section 2: Strengths & Weaknesses ---
+    html += '<h2 class="section-title">Strengths &amp; Weaknesses</h2>';
+    html += '<div class="sw-grid">';
+
+    // Strengths panel
+    html += '<div class="sw-panel"><h3><span style="color:var(--green)">&#9650;</span> Strengths</h3><ul>';
+    for (const c of insights.strongCats.slice(0, 8)) {
+        html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-good">${c.gibbon} vs ${c.competitor}</span></li>`;
+    }
+    for (const p of insights.priceAdvantages.slice(0, 8)) {
+        html += `<li><span style="font-size:0.78rem">${escHtml(truncate(p.name, 50))}</span>
+            <span class="sw-badge sw-badge-good">$${p.saving.toFixed(2)} cheaper</span></li>`;
+    }
+    if (insights.gibbonUnique > 0) {
+        html += `<li><span>Unique products not sold by competitors</span><span class="sw-badge sw-badge-good">${insights.gibbonUnique} products</span></li>`;
+    }
+    if (!insights.strongCats.length && !insights.priceAdvantages.length) {
+        html += '<li style="color:var(--text-muted)">No notable strengths detected</li>';
+    }
+    html += '</ul></div>';
+
+    // Weaknesses panel
+    html += '<div class="sw-panel"><h3><span style="color:var(--red)">&#9660;</span> Weaknesses</h3><ul>';
+    for (const c of insights.zeroCats.slice(0, 6)) {
+        html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-bad">0 products (${c.competitorTotal} competitor)</span></li>`;
+    }
+    for (const c of insights.weakCats.slice(0, 6)) {
+        html += `<li><span>${escHtml(c.cat)}</span><span class="sw-badge sw-badge-warn">${c.gibbon} vs ${c.competitor}</span></li>`;
+    }
+    for (const p of insights.priceDisadvantages.slice(0, 6)) {
+        html += `<li><span style="font-size:0.78rem">${escHtml(truncate(p.name, 50))}</span>
+            <span class="sw-badge sw-badge-bad">$${p.diff.toFixed(2)} more expensive</span></li>`;
+    }
+    if (!insights.zeroCats.length && !insights.weakCats.length && !insights.priceDisadvantages.length) {
+        html += '<li style="color:var(--text-muted)">No notable weaknesses detected</li>';
+    }
+    html += '</ul></div>';
+    html += '</div>';
+
+    // --- Section 3: Gap Table ---
+    html += '<h2 class="section-title">Gap Products — What Gibbon is Missing</h2>';
+    html += buildGapControls();
+    html += '<div id="gap-table"></div>';
+
+    el.innerHTML = html;
+    renderGapTable();
+}
+
+function card(value, label, sub, color) {
+    return `<div class="card">
+        <div class="card-value" style="color:${color}">${value}</div>
+        <div class="card-label">${label}</div>
+        ${sub ? `<div class="card-sub">${sub}</div>` : ''}
+    </div>`;
+}
+
+function truncate(str, len) {
+    return str.length > len ? str.substring(0, len) + '...' : str;
+}
+
+// ---------------------------------------------------------------------------
+// Gap table with search, filter, sort
+// ---------------------------------------------------------------------------
+function buildGapControls() {
+    // Build category options
+    const cats = new Set();
+    for (const p of gapProducts) {
+        if (p.category) cats.add(p.category);
+    }
+    const sortedCats = [...cats].sort();
+
+    let opts = '<option value="">All Categories</option>';
+    for (const c of sortedCats) {
+        opts += `<option value="${escHtml(c)}">${escHtml(c)}</option>`;
+    }
+
+    return `<div class="gap-controls">
+        <input type="text" id="gap-search" placeholder="Search gap products..." oninput="renderGapTable()">
+        <select id="gap-category" onchange="renderGapTable()">${opts}</select>
+        <select id="gap-supplier" onchange="renderGapTable()">
+            <option value="">All Suppliers</option>
+            <option value="kevmor">Kevmor</option>
+            <option value="intafloors">Intafloors</option>
+        </select>
+        <span class="gap-count" id="gap-count"></span>
+    </div>`;
+}
+
+function getFilteredGaps() {
+    const search = (document.getElementById('gap-search')?.value || '').toLowerCase();
+    const catFilter = document.getElementById('gap-category')?.value || '';
+    const supFilter = document.getElementById('gap-supplier')?.value || '';
+
+    let filtered = gapProducts;
+    if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+    if (catFilter) filtered = filtered.filter(p => p.category === catFilter);
+    if (supFilter) filtered = filtered.filter(p => p._supplier === supFilter);
+
+    // Sort
+    filtered = [...filtered];
+    filtered.sort((a, b) => {
+        let va, vb;
+        if (gapSortCol === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+        else if (gapSortCol === 'price') { va = a.price || 999999; vb = b.price || 999999; }
+        else if (gapSortCol === 'category') { va = (a.category || '').toLowerCase(); vb = (b.category || '').toLowerCase(); }
+        else if (gapSortCol === 'supplier') { va = a._supplier; vb = b._supplier; }
+        else { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+
+        if (va < vb) return gapSortAsc ? -1 : 1;
+        if (va > vb) return gapSortAsc ? 1 : -1;
+        return 0;
+    });
+
+    return filtered;
+}
+
+function sortGap(col) {
+    if (gapSortCol === col) { gapSortAsc = !gapSortAsc; }
+    else { gapSortCol = col; gapSortAsc = true; }
+    renderGapTable();
+}
+
+function sortArrow(col) {
+    if (gapSortCol !== col) return '';
+    return `<span class="sort-arrow">${gapSortAsc ? '&#9650;' : '&#9660;'}</span>`;
+}
+
+function renderGapTable() {
+    const el = document.getElementById('gap-table');
+    if (!el) return;
+
+    const filtered = getFilteredGaps();
+    document.getElementById('gap-count').textContent = `${filtered.length} gap products`;
+
+    if (!filtered.length) {
+        el.innerHTML = '<div class="empty-state"><h2>No Gap Products</h2><p>All competitor products have a match in Gibbon\'s catalog, or no results match your filters.</p></div>';
+        return;
+    }
+
+    let html = `<div class="table-wrapper"><table><thead><tr>
+        <th style="width:4%">#</th>
+        <th style="width:40%" onclick="sortGap('name')">Product ${sortArrow('name')}</th>
+        <th style="width:12%" onclick="sortGap('price')">Price ${sortArrow('price')}</th>
+        <th style="width:22%" onclick="sortGap('category')">Category ${sortArrow('category')}</th>
+        <th style="width:12%" onclick="sortGap('supplier')">Supplier ${sortArrow('supplier')}</th>
+        <th style="width:10%">Link</th>
+    </tr></thead><tbody>`;
+
+    for (let i = 0; i < filtered.length; i++) {
+        const p = filtered[i];
+        const meta = SUPPLIER_META[p._supplier];
+        html += `<tr>
+            <td style="color:var(--text-muted);font-size:0.75rem">${i + 1}</td>
+            <td><div class="product-name">${escHtml(p.name)}</div></td>
+            <td><span class="price">${p.price ? '$' + p.price.toFixed(2) : '<span class="price-na">' + escHtml(p.price_display || 'N/A') + '</span>'}</span></td>
+            <td class="product-category">${escHtml(p.category || '')}</td>
+            <td><span class="source-tag ${meta.cssClass}">${escHtml(meta.name)}</span></td>
+            <td>${p.url ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:0.78rem">View</a>` : '-'}</td>
+        </tr>`;
+    }
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+loadData();
+</script>
+</body>
+</html>

@@ -251,12 +251,13 @@
         .btn-primary:hover { background: var(--accent-hover); }
         .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
         .btn-ghost:hover { background: var(--surface2); }
-        .refresh-btn {
+        .refresh-btn, .nav-btn {
             background: var(--surface2); border: 1px solid var(--border);
             color: var(--text-muted); padding: 0.4rem 0.7rem;
             border-radius: 6px; font-size: 0.78rem; cursor: pointer;
+            text-decoration: none; display: inline-block;
         }
-        .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+        .refresh-btn:hover, .nav-btn:hover { border-color: var(--accent); color: var(--text); }
         .modal-msg { font-size: 0.82rem; margin-top: 0.75rem; min-height: 1.2em; }
         .msg-ok { color: var(--green); }
         .msg-err { color: var(--red); }
@@ -293,6 +294,8 @@
                 <input type="range" id="threshold" min="25" max="80" value="40" oninput="updateThresholdLabel()" onchange="renderAll()">
                 <span id="threshold-label">40%</span>
             </div>
+            <a href="fixed.html" class="nav-btn">💰 Fixed Pricing</a>
+            <a href="insights.html" class="nav-btn">📊 Insights</a>
             <button class="refresh-btn" onclick="showPinModal()">Refresh Data</button>
         </div>
     </div>
