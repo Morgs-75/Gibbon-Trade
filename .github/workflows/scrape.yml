@@ -1,6 +1,8 @@
 name: Scrape Suppliers
 
 on:
+  push:
+    branches: [master]
   schedule:
     # Run daily at 6am AEST (8pm UTC previous day)
     - cron: '0 20 * * *'
