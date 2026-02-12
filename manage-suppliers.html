@@ -410,7 +410,7 @@
                         <option value="shopify">Shopify</option>
                         <option value="custom">Custom</option>
                     </select>
-                    <small>Platform type</small>
+                    <small>Platform type <button type="button" class="btn-ghost" onclick="autoDetectType()" style="font-size:0.75rem;padding:0.2rem 0.5rem;margin-left:0.3rem;">🔍 Auto-detect</button></small>
                 </div>
             </div>
             <div class="form-group">
@@ -630,6 +630,102 @@ function cancelEdit() {
     document.getElementById('form-title').textContent = 'Add New Supplier';
     document.getElementById('form-submit-btn').textContent = 'Add Supplier';
     document.getElementById('form-cancel-btn').style.display = 'none';
+}
+
+// ---------------------------------------------------------------------------
+// Auto-detect supplier type
+// ---------------------------------------------------------------------------
+async function autoDetectType() {
+    const urlInput = document.getElementById('supplier-url');
+    const typeSelect = document.getElementById('supplier-type');
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        alert('Please enter a website URL first');
+        urlInput.focus();
+        return;
+    }
+
+    // Validate URL format
+    try {
+        new URL(url);
+    } catch (e) {
+        alert('Please enter a valid URL (including https://)');
+        urlInput.focus();
+        return;
+    }
+
+    // Show detecting message
+    const originalText = typeSelect.options[0].text;
+    typeSelect.options[0].text = '🔍 Detecting...';
+    typeSelect.value = '';
+    typeSelect.disabled = true;
+
+    try {
+        // Test for WooCommerce
+        try {
+            const wcRes = await fetch(`${url}/wp-json/wc/store/v1/products?per_page=1`, {
+                method: 'GET',
+                mode: 'no-cors' // CORS will likely block, but that's ok
+            });
+            // If we get here without error, it might be WooCommerce
+            // But no-cors doesn't let us read response, so check if URL pattern works
+        } catch (e) {
+            // Ignore CORS errors
+        }
+
+        // Test for Shopify
+        let isShopify = false;
+        try {
+            const shopifyRes = await fetch(`${url}/products.json?limit=1`, {
+                method: 'GET',
+                mode: 'cors'
+            });
+            if (shopifyRes.ok) {
+                const data = await shopifyRes.json();
+                if (data.products) {
+                    isShopify = true;
+                }
+            }
+        } catch (e) {
+            // Not Shopify or CORS blocked
+        }
+
+        // Test for WooCommerce (try alternative check)
+        let isWooCommerce = false;
+        try {
+            const wpRes = await fetch(`${url}/wp-json/`, {
+                method: 'GET',
+                mode: 'cors'
+            });
+            if (wpRes.ok) {
+                const data = await wpRes.json();
+                if (data.routes && data.routes['/wc/store/v1']) {
+                    isWooCommerce = true;
+                }
+            }
+        } catch (e) {
+            // Not WooCommerce or CORS blocked
+        }
+
+        // Set detected type
+        if (isShopify) {
+            typeSelect.value = 'shopify';
+            alert('✅ Detected: Shopify');
+        } else if (isWooCommerce) {
+            typeSelect.value = 'woocommerce';
+            alert('✅ Detected: WooCommerce');
+        } else {
+            typeSelect.value = 'custom';
+            alert('⚠️ Could not detect platform (CORS may be blocking).\nDefaulting to "Custom" - you may need to select manually.');
+        }
+    } catch (e) {
+        alert('❌ Detection failed: ' + e.message);
+        typeSelect.value = 'custom';
+    } finally {
+        typeSelect.options[0].text = originalText;
+        typeSelect.disabled = false;
+    }
 }
 
 // ---------------------------------------------------------------------------
