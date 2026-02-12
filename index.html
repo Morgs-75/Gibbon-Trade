@@ -967,7 +967,7 @@ async function loadData() {
         const [products, logs, supplierConfigs] = await Promise.all([
             sbFetch('products?select=*&order=name.asc'),
             sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
-            sbFetch('supplier_config?select=*&eq=enabled.true&order=name.asc'),
+            sbFetch('supplier_config?select=*&enabled=eq.true&order=name.asc'),
         ]);
 
         // Build SUPPLIER_META from database
@@ -1000,12 +1000,10 @@ async function loadData() {
             });
         }
 
-        // Map source keys to supplier meta
-        const sourceToKey = { kevmor: 'kevmor', intafloors: 'intafloors', gibbon: 'gibbon', marques: 'marques', floortrade: 'floortrade', gluesntools: 'gluesntools', homely: 'homely' };
+        // Map source to suppliers (source field matches supplier key)
         const suppliers = {};
         for (const [src, prods] of Object.entries(bySource)) {
-            const key = sourceToKey[src] || src;
-            suppliers[key] = { products: prods };
+            suppliers[src] = { products: prods };
         }
 
         const latestLog = logs.length ? logs[0] : null;
