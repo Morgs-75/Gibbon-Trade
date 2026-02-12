@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Suppliers - Gibbon Trade</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+
+        /* Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--green));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; color: white;
+        }
+        h1 { font-size: 1.2rem; font-weight: 700; }
+        h1 .subtitle { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; display: block; line-height: 1.1; }
+
+        .nav-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 0.4rem 0.7rem;
+            border-radius: 6px; font-size: 0.78rem; cursor: pointer;
+            text-decoration: none; display: inline-block;
+        }
+        .nav-btn:hover { border-color: var(--accent); color: var(--text); }
+
+        /* Main content */
+        .page-header {
+            margin: 2rem 0 1.5rem;
+        }
+        .page-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Supplier list */
+        .supplier-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .supplier-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .supplier-info {
+            flex: 1;
+        }
+        .supplier-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        .supplier-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .supplier-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .badge {
+            background: var(--surface);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-woo { color: #8b5cf6; }
+        .badge-shopify { color: #22c55e; }
+        .badge-custom { color: #f59e0b; }
+        .badge-protected { color: var(--green); border: 1px solid var(--green); }
+
+        .supplier-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        .btn-danger {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .btn-danger:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover {
+            background: var(--surface2);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--text-muted);
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+        }
+        .form-group small {
+            display: block;
+            margin-top: 0.3rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 320px;
+            text-align: center;
+        }
+        .modal h3 {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        .modal input[type="password"] {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            text-align: center;
+            width: 140px;
+            letter-spacing: 0.3em;
+            outline: none;
+        }
+        .modal input[type="password"]:focus { border-color: var(--accent); }
+        .modal-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .modal-msg {
+            font-size: 0.82rem;
+            margin-top: 0.75rem;
+            min-height: 1.2em;
+        }
+        .msg-ok { color: var(--green); }
+        .msg-err { color: var(--red); }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            gap: 0.75rem;
+            color: var(--text-muted);
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid;
+        }
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: var(--accent);
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--orange);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .supplier-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">GT</div>
+            <h1>Gibbon Trade<span class="subtitle">Supplier Management</span></h1>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="index.html" class="nav-btn">← Back to Comparison</a>
+            <a href="insights.html" class="nav-btn">📊 Insights</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="page-header">
+        <h2>🏪 Manage Suppliers</h2>
+        <p>Add or remove competitors for price comparison and scraping</p>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>ℹ️ Note:</strong> Changes to suppliers require PIN authentication and will take effect on the next data refresh.
+    </div>
+
+    <!-- Current Suppliers -->
+    <div class="card">
+        <h3><span class="card-icon">📋</span> Current Suppliers</h3>
+        <div id="supplier-list" class="supplier-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading suppliers...
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Supplier -->
+    <div class="card">
+        <h3><span class="card-icon">➕</span> Add New Supplier</h3>
+        <form id="add-supplier-form">
+            <div class="form-group">
+                <label for="supplier-name">Supplier Name *</label>
+                <input type="text" id="supplier-name" placeholder="e.g., Floor Supplies Australia" required>
+                <small>Display name for the supplier</small>
+            </div>
+            <div class="form-group">
+                <label for="supplier-key">Supplier Key *</label>
+                <input type="text" id="supplier-key" placeholder="e.g., floorsupplies" pattern="[a-z0-9_]+" required>
+                <small>Lowercase, no spaces (used internally)</small>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="supplier-url">Website URL *</label>
+                    <input type="url" id="supplier-url" placeholder="https://example.com.au" required>
+                    <small>Full website URL including https://</small>
+                </div>
+                <div class="form-group">
+                    <label for="supplier-type">Scraper Type *</label>
+                    <select id="supplier-type" required>
+                        <option value="">Select type...</option>
+                        <option value="woocommerce">WooCommerce</option>
+                        <option value="shopify">Shopify</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <small>Platform type</small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="supplier-color">Display Color</label>
+                <input type="color" id="supplier-color" value="#3b82f6">
+                <small>Color for charts and badges</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Supplier</button>
+        </form>
+    </div>
+</div>
+
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pin-modal">
+    <div class="modal">
+        <h3 id="modal-title">Enter PIN</h3>
+        <input type="password" id="pin-input" maxlength="4" placeholder="----" onkeydown="if(event.key==='Enter')confirmAction()">
+        <div class="modal-btns">
+            <button class="btn btn-ghost" onclick="closePinModal()">Cancel</button>
+            <button class="btn btn-primary" id="confirm-btn" onclick="confirmAction()">Confirm</button>
+        </div>
+        <div class="modal-msg" id="pin-msg"></div>
+    </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Supabase config
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
+
+const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+};
+
+async function sbFetch(path, options = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        ...options,
+        headers: { ...SB_HEADERS, ...options.headers }
+    });
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Default suppliers (fallback if no config table exists)
+// ---------------------------------------------------------------------------
+const DEFAULT_SUPPLIERS = [
+    { key: 'kevmor', name: 'Kevmor', url: 'https://kevmor.com.au', type: 'custom', color: '#f97316', protected: false },
+    { key: 'intafloors', name: 'Intafloors', url: 'https://intafloors.com.au', type: 'woocommerce', color: '#06b6d4', protected: false },
+    { key: 'gibbon', name: 'Gibbon Trade', url: 'https://gibbontrade.com.au', type: 'woocommerce', color: '#22c55e', protected: true },
+    { key: 'marques', name: 'Marques', url: 'https://marquesflooring.com.au', type: 'woocommerce', color: '#a855f7', protected: false },
+    { key: 'floortrade', name: 'Floor Trade', url: 'https://www.floortrade.au', type: 'woocommerce', color: '#ec4899', protected: false },
+    { key: 'gluesntools', name: 'Glues N Tools', url: 'https://gluesntools.com.au', type: 'shopify', color: '#eab308', protected: false },
+    { key: 'homely', name: 'Homely', url: 'https://www.homelyflooring.com.au', type: 'woocommerce', color: '#14b8a6', protected: false },
+];
+
+let suppliers = [];
+let pendingAction = null;
+
+// ---------------------------------------------------------------------------
+// Load suppliers
+// ---------------------------------------------------------------------------
+async function loadSuppliers() {
+    try {
+        // Try to load from Supabase supplier_config table
+        const configs = await sbFetch('supplier_config?select=*&order=name.asc');
+        if (configs && configs.length > 0) {
+            suppliers = configs;
+        } else {
+            // Use default suppliers
+            suppliers = DEFAULT_SUPPLIERS;
+        }
+    } catch (e) {
+        console.warn('Could not load from supplier_config, using defaults:', e);
+        suppliers = DEFAULT_SUPPLIERS;
+    }
+    renderSuppliers();
+}
+
+function renderSuppliers() {
+    const list = document.getElementById('supplier-list');
+
+    if (!suppliers.length) {
+        list.innerHTML = '<div class="loading">No suppliers configured</div>';
+        return;
+    }
+
+    let html = '';
+    for (const sup of suppliers) {
+        const typeClass = sup.type === 'woocommerce' ? 'badge-woo' : sup.type === 'shopify' ? 'badge-shopify' : 'badge-custom';
+        const deleteDisabled = sup.protected ? 'disabled' : '';
+        const protectedBadge = sup.protected ? '<span class="badge badge-protected">Protected</span>' : '';
+
+        html += `
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <div class="supplier-name">${escHtml(sup.name)}</div>
+                    <div class="supplier-meta">
+                        <span><span class="badge ${typeClass}">${sup.type}</span></span>
+                        <span>🔗 ${escHtml(sup.url)}</span>
+                        ${protectedBadge}
+                    </div>
+                </div>
+                <div class="supplier-actions">
+                    <button class="btn btn-danger" onclick="deleteSupplier('${sup.key}')" ${deleteDisabled}>
+                        🗑️ Remove
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    list.innerHTML = html;
+}
+
+function escHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}
+
+// ---------------------------------------------------------------------------
+// Add supplier
+// ---------------------------------------------------------------------------
+document.getElementById('add-supplier-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('supplier-name').value.trim();
+    const key = document.getElementById('supplier-key').value.trim().toLowerCase();
+    const url = document.getElementById('supplier-url').value.trim();
+    const type = document.getElementById('supplier-type').value;
+    const color = document.getElementById('supplier-color').value;
+
+    // Validate
+    if (!name || !key || !url || !type) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(key)) {
+        alert('Supplier key must be lowercase letters, numbers, and underscores only');
+        return;
+    }
+
+    if (suppliers.find(s => s.key === key)) {
+        alert('A supplier with this key already exists');
+        return;
+    }
+
+    // Queue the add action
+    pendingAction = {
+        type: 'add',
+        data: { key, name, url, type, color, protected: false }
+    };
+
+    showPinModal('Add Supplier');
+});
+
+// ---------------------------------------------------------------------------
+// Delete supplier
+// ---------------------------------------------------------------------------
+function deleteSupplier(key) {
+    const supplier = suppliers.find(s => s.key === key);
+    if (!supplier) return;
+
+    if (supplier.protected) {
+        alert('This supplier is protected and cannot be removed');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to remove ${supplier.name}?`)) {
+        return;
+    }
+
+    pendingAction = {
+        type: 'delete',
+        data: { key }
+    };
+
+    showPinModal('Confirm Removal');
+}
+
+// ---------------------------------------------------------------------------
+// PIN modal
+// ---------------------------------------------------------------------------
+function showPinModal(title) {
+    document.getElementById('modal-title').textContent = title || 'Enter PIN';
+    document.getElementById('pin-modal').classList.add('active');
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-msg').textContent = '';
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+function closePinModal() {
+    document.getElementById('pin-modal').classList.remove('active');
+    pendingAction = null;
+}
+
+async function confirmAction() {
+    const pin = document.getElementById('pin-input').value;
+    const msg = document.getElementById('pin-msg');
+    const btn = document.getElementById('confirm-btn');
+
+    if (!pin || pin.length < 4) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Enter your 4-digit PIN';
+        return;
+    }
+
+    if (!pendingAction) {
+        closePinModal();
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    msg.className = 'modal-msg';
+    msg.textContent = '';
+
+    try {
+        // Call the API to verify PIN and perform action
+        const res = await fetch('/api/manage-suppliers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pin,
+                action: pendingAction.type,
+                data: pendingAction.data
+            }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            msg.className = 'modal-msg msg-ok';
+            msg.textContent = data.message || 'Success!';
+
+            // Reload suppliers after 1 second
+            setTimeout(() => {
+                closePinModal();
+                loadSuppliers();
+                // Reset form if it was an add
+                if (pendingAction.type === 'add') {
+                    document.getElementById('add-supplier-form').reset();
+                }
+            }, 1000);
+        } else {
+            msg.className = 'modal-msg msg-err';
+            msg.textContent = data.error || 'Failed';
+        }
+    } catch (e) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Network error: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirm';
+    }
+}
+
+// Close modal on overlay click
+document.getElementById('pin-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closePinModal();
+});
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+loadSuppliers();
+</script>
+</body>
+</html>

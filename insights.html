@@ -238,6 +238,7 @@
         </div>
         <div style="display:flex;gap:0.5rem;">
             <a href="fixed.html" class="nav-link">💰 Fixed Pricing</a>
+            <a href="manage-suppliers.html" class="nav-link">🏪 Suppliers</a>
             <a href="index.html" class="nav-link">&larr; Back to Comparison</a>
         </div>
     </div>
@@ -286,6 +287,27 @@ const STOP_WORDS = new Set([
     'all','new','free','per','mm','kg','ltr','litre','ml','pack','set','each',
     'pair','x','gst','excl','inc',
 ]);
+
+// Keywords that indicate replacement parts/accessories (not complete products)
+const PART_KEYWORDS = new Set([
+    'replacement', 'blade', 'blades', 'spare', 'part', 'parts',
+    'accessory', 'accessories', 'refill', 'cartridge', 'tip', 'tips',
+    'attachment', 'attachments', 'bit', 'bits', 'pad', 'pads',
+    'disc', 'discs', 'wheel', 'wheels', 'belt', 'belts',
+]);
+
+function isReplacementPart(product) {
+    const nameLower = product.name.toLowerCase();
+    const urlLower = (product.url || '').toLowerCase();
+
+    // Check product name and URL for part keywords
+    for (const keyword of PART_KEYWORDS) {
+        if (nameLower.includes(keyword) || urlLower.includes(keyword)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 function normalize(name) {
     name = name.toLowerCase().trim();
@@ -381,9 +403,10 @@ async function loadData() {
 // Core analysis
 // ---------------------------------------------------------------------------
 function runAnalysis() {
-    const gibbon = (DATA.suppliers.gibbon || { products: [] }).products;
-    const kevmor = (DATA.suppliers.kevmor || { products: [] }).products;
-    const intafloors = (DATA.suppliers.intafloors || { products: [] }).products;
+    // Filter out replacement parts from analysis
+    const gibbon = (DATA.suppliers.gibbon || { products: [] }).products.filter(p => !isReplacementPart(p));
+    const kevmor = (DATA.suppliers.kevmor || { products: [] }).products.filter(p => !isReplacementPart(p));
+    const intafloors = (DATA.suppliers.intafloors || { products: [] }).products.filter(p => !isReplacementPart(p));
 
     // Pre-tokenize Gibbon products for performance
     const gibbonTokenized = gibbon.map(p => ({ ...p, _tokens: tokenize(p.name) }));

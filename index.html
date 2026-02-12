@@ -321,6 +321,7 @@
             </div>
             <a href="fixed.html" class="nav-btn">💰 Fixed Pricing</a>
             <a href="insights.html" class="nav-btn">📊 Insights</a>
+            <a href="manage-suppliers.html" class="nav-btn">🏪 Suppliers</a>
             <button class="refresh-btn" onclick="showPinModal()">Refresh Data</button>
         </div>
     </div>
@@ -388,6 +389,27 @@ const STOP_WORDS = new Set([
     'pair','x','gst','excl','inc',
 ]);
 
+// Keywords that indicate replacement parts/accessories (not complete products)
+const PART_KEYWORDS = new Set([
+    'replacement', 'blade', 'blades', 'spare', 'part', 'parts',
+    'accessory', 'accessories', 'refill', 'cartridge', 'tip', 'tips',
+    'attachment', 'attachments', 'bit', 'bits', 'pad', 'pads',
+    'disc', 'discs', 'wheel', 'wheels', 'belt', 'belts',
+]);
+
+function isReplacementPart(product) {
+    const nameLower = product.name.toLowerCase();
+    const urlLower = (product.url || '').toLowerCase();
+
+    // Check product name and URL for part keywords
+    for (const keyword of PART_KEYWORDS) {
+        if (nameLower.includes(keyword) || urlLower.includes(keyword)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function normalize(name) {
     name = name.toLowerCase().trim();
     name = name.replace(/[®™©�\u0000-\u001f]/g, '');
@@ -421,11 +443,18 @@ function matchProducts(supplierKeys, threshold) {
     if (matchCache && matchCacheKey === cacheKey) return matchCache;
 
     const allProducts = [];
+    const excludedParts = [];
+
     for (const key of supplierKeys) {
         const sup = DATA.suppliers[key];
         if (!sup) continue;
         for (const p of sup.products) {
-            allProducts.push({ ...p, _supplier: key, _tokens: tokenize(p.name) });
+            // Separate replacement parts from complete products
+            if (isReplacementPart(p)) {
+                excludedParts.push({ ...p, _supplier: key, _tokens: tokenize(p.name), _isReplacementPart: true });
+            } else {
+                allProducts.push({ ...p, _supplier: key, _tokens: tokenize(p.name) });
+            }
         }
     }
 
@@ -468,14 +497,20 @@ function matchProducts(supplierKeys, threshold) {
         }
     }
 
-    // Unmatched
+    // Unmatched (include excluded parts in unmatched list)
     const unmatched = [];
     for (let i = 0; i < allProducts.length; i++) {
         if (!used.has(i)) unmatched.push(allProducts[i]);
     }
+    // Add all excluded replacement parts to unmatched
+    unmatched.push(...excludedParts);
 
     groups.sort((a, b) => b.score - a.score);
-    const result = { groups, unmatched, allProducts };
+
+    // Combine all products for "All Products" tab
+    const allProductsCombined = [...allProducts, ...excludedParts];
+
+    const result = { groups, unmatched, allProducts: allProductsCombined, excludedPartsCount: excludedParts.length };
     matchCache = result;
     matchCacheKey = cacheKey;
     return result;
@@ -547,6 +582,12 @@ function renderStats(result, keys) {
         <div class="stat-value" style="color:var(--accent)">${result.groups.length}</div>
         <div class="stat-label">Matched Groups</div>
     </div>`;
+    if (result.excludedPartsCount > 0) {
+        html += `<div class="stat">
+            <div class="stat-value" style="color:var(--orange)">${result.excludedPartsCount}</div>
+            <div class="stat-label">Parts Excluded</div>
+        </div>`;
+    }
     bar.innerHTML = html;
 
     if (DATA.timestamp) {
@@ -695,6 +736,7 @@ function renderAllProducts(el, products) {
     for (let i = 0; i < products.length; i++) {
         const p = products[i];
         const meta = SUPPLIER_META[p._supplier] || { name: p.source || '?', cssClass: '' };
+        const isPartBadge = p._isReplacementPart ? '<span style="background:rgba(245,158,11,0.2);color:var(--orange);padding:0.1rem 0.4rem;border-radius:3px;font-size:0.68rem;font-weight:600;margin-left:0.3rem">PART</span>' : '';
 
         html += `<tr>
             <td style="color:var(--text-muted);font-size:0.75rem">${i + 1}</td>
@@ -702,7 +744,7 @@ function renderAllProducts(el, products) {
                 <div class="product-cell">
                     ${p.image ? `<img class="product-img" src="${escHtml(p.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
                     <div>
-                        <div class="product-name"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a></div>
+                        <div class="product-name"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.name)}</a>${isPartBadge}</div>
                     </div>
                 </div>
             </td>
