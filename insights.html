@@ -233,6 +233,23 @@
         }
         .empty-state h2 { font-size: 1.15rem; margin-bottom: 0.4rem; color: var(--text); }
 
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .timestamp-icon { font-size: 1.2rem; }
+        .timestamp-text { flex: 1; }
+        .timestamp-label { font-weight: 600; margin-right: 0.5rem; }
+        .timestamp-value { color: var(--text-muted); }
+
         @media (max-width: 768px) {
             .sw-grid { grid-template-columns: 1fr; }
             .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
@@ -261,6 +278,7 @@
 </header>
 
 <div class="container">
+    <div id="timestamp" class="timestamp" style="display:none;"></div>
     <div id="content">
         <div class="loading"><div class="spinner"></div>Loading product data &amp; analyzing gaps...</div>
     </div>
@@ -400,7 +418,14 @@ async function loadData() {
             suppliers[key] = { products: prods };
         }
 
-        DATA = { suppliers };
+        const latestLog = logs.length ? logs[0] : null;
+
+        DATA = {
+            suppliers,
+            timestamp: latestLog ? latestLog.completed_at : new Date().toISOString(),
+            scrapeStatus: latestLog ? latestLog.status : 'success'
+        };
+        displayTimestamp();
         runAnalysis();
     } catch (e) {
         console.error('Load error:', e);
@@ -851,6 +876,31 @@ function initTheme() {
 
 // Initialize theme
 initTheme();
+
+// ---------------------------------------------------------------------------
+// Display timestamp
+// ---------------------------------------------------------------------------
+function displayTimestamp() {
+    if (!DATA || !DATA.timestamp) return;
+
+    const el = document.getElementById('timestamp');
+    const date = new Date(DATA.timestamp);
+    const now = new Date();
+    const hoursSince = Math.floor((now - date) / (1000 * 60 * 60));
+    const timeAgo = hoursSince < 1 ? 'Less than 1 hour ago' :
+                   hoursSince === 1 ? '1 hour ago' :
+                   hoursSince < 24 ? `${hoursSince} hours ago` :
+                   `${Math.floor(hoursSince / 24)} days ago`;
+
+    el.innerHTML = `
+        <span class="timestamp-icon">🕒</span>
+        <span class="timestamp-text">
+            <span class="timestamp-label">Last Updated:</span>
+            <span class="timestamp-value">${date.toLocaleString()} (${timeAgo})</span>
+        </span>
+    `;
+    el.style.display = 'flex';
+}
 
 // ---------------------------------------------------------------------------
 loadData();
