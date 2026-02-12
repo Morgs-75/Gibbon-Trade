@@ -489,27 +489,6 @@ const STOP_WORDS = new Set([
     'pair','x','gst','excl','inc',
 ]);
 
-// Keywords that indicate replacement parts/accessories (not complete products)
-// Only use specific, clear indicators to avoid over-filtering
-const PART_KEYWORDS = new Set([
-    'replacement blade', 'replacement blades', 'spare blade', 'spare blades',
-    'blade only', 'blades only', 'replacement part', 'spare part',
-    'replacement cartridge', 'refill cartridge',
-]);
-
-function isReplacementPart(product) {
-    const nameLower = product.name.toLowerCase();
-    const urlLower = (product.url || '').toLowerCase();
-
-    // Check product name and URL for part keywords
-    for (const keyword of PART_KEYWORDS) {
-        if (nameLower.includes(keyword) || urlLower.includes(keyword)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function normalize(name) {
     name = name.toLowerCase().trim();
     name = name.replace(/[®™©�\u0000-\u001f]/g, '');
@@ -543,18 +522,13 @@ function matchProducts(supplierKeys, threshold) {
     if (matchCache && matchCacheKey === cacheKey) return matchCache;
 
     const allProducts = [];
-    const excludedParts = [];
 
     for (const key of supplierKeys) {
         const sup = DATA.suppliers[key];
         if (!sup) continue;
         for (const p of sup.products) {
-            // Separate replacement parts from complete products
-            if (isReplacementPart(p)) {
-                excludedParts.push({ ...p, _supplier: key, _tokens: tokenize(p.name), _isReplacementPart: true });
-            } else {
-                allProducts.push({ ...p, _supplier: key, _tokens: tokenize(p.name) });
-            }
+            // Include all products - if it has a price, compare it
+            allProducts.push({ ...p, _supplier: key, _tokens: tokenize(p.name) });
         }
     }
 
@@ -602,15 +576,9 @@ function matchProducts(supplierKeys, threshold) {
     for (let i = 0; i < allProducts.length; i++) {
         if (!used.has(i)) unmatched.push(allProducts[i]);
     }
-    // Add all excluded replacement parts to unmatched
-    unmatched.push(...excludedParts);
-
     groups.sort((a, b) => b.score - a.score);
 
-    // Combine all products for "All Products" tab
-    const allProductsCombined = [...allProducts, ...excludedParts];
-
-    const result = { groups, unmatched, allProducts: allProductsCombined, excludedPartsCount: excludedParts.length };
+    const result = { groups, unmatched, allProducts };
     matchCache = result;
     matchCacheKey = cacheKey;
     return result;
@@ -755,12 +723,6 @@ function renderStats(result, keys) {
         <div class="stat-value" style="color:var(--accent)">${result.groups.length}</div>
         <div class="stat-label">Matched Groups</div>
     </div>`;
-    if (result.excludedPartsCount > 0) {
-        html += `<div class="stat">
-            <div class="stat-value" style="color:var(--orange)">${result.excludedPartsCount}</div>
-            <div class="stat-label">Parts Excluded</div>
-        </div>`;
-    }
     bar.innerHTML = html;
 
     if (DATA.timestamp) {
