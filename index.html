@@ -983,26 +983,59 @@ async function sbFetch(path) {
 async function loadData() {
     try {
         // Fetch products, scrape logs, and supplier config in parallel
-        const [products, logs, supplierConfigs] = await Promise.all([
-            sbFetch('products?select=*&order=name.asc'),
-            sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
-            sbFetch('supplier_config?select=*&enabled=eq.true&order=name.asc'),
-        ]);
-
-        // Build SUPPLIER_META from database
-        SUPPLIER_META = {};
-        for (const config of supplierConfigs) {
-            SUPPLIER_META[config.key] = {
-                name: config.name,
-                color: config.color || '#3b82f6',
-                cssClass: `source-${config.key}`
-            };
-            // Add to active suppliers by default
-            activeSuppliers.add(config.key);
+        let products, logs, supplierConfigs;
+        try {
+            [products, logs, supplierConfigs] = await Promise.all([
+                sbFetch('products?select=*&order=name.asc'),
+                sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
+                sbFetch('supplier_config?select=*&enabled=eq.true&order=name.asc'),
+            ]);
+        } catch (e) {
+            console.warn('Failed to load supplier_config, using defaults:', e);
+            [products, logs] = await Promise.all([
+                sbFetch('products?select=*&order=name.asc'),
+                sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
+            ]);
+            supplierConfigs = [];
         }
 
-        // Build dropdown menu from supplier configs
-        buildSupplierDropdown(supplierConfigs);
+        // Build SUPPLIER_META from database or use hardcoded defaults
+        SUPPLIER_META = {};
+        activeSuppliers.clear();
+
+        if (supplierConfigs && supplierConfigs.length > 0) {
+            // Use database config
+            for (const config of supplierConfigs) {
+                SUPPLIER_META[config.key] = {
+                    name: config.name,
+                    color: config.color || '#3b82f6',
+                    cssClass: `source-${config.key}`
+                };
+                activeSuppliers.add(config.key);
+            }
+            buildSupplierDropdown(supplierConfigs);
+        } else {
+            // Fallback to hardcoded suppliers
+            console.info('Using hardcoded supplier list');
+            const defaultSuppliers = [
+                { key: 'kevmor', name: 'Kevmor', color: '#f97316' },
+                { key: 'intafloors', name: 'Intafloors', color: '#06b6d4' },
+                { key: 'gibbon', name: 'Gibbon Trade', color: '#22c55e' },
+                { key: 'marques', name: 'Marques', color: '#a855f7' },
+                { key: 'floortrade', name: 'Floor Trade', color: '#ec4899' },
+                { key: 'gluesntools', name: 'Glues N Tools', color: '#eab308' },
+                { key: 'homely', name: 'Homely', color: '#14b8a6' },
+            ];
+            for (const config of defaultSuppliers) {
+                SUPPLIER_META[config.key] = {
+                    name: config.name,
+                    color: config.color,
+                    cssClass: `source-${config.key}`
+                };
+                activeSuppliers.add(config.key);
+            }
+            buildSupplierDropdown(defaultSuppliers);
+        }
 
         // Group by source into supplier structure
         const bySource = {};
