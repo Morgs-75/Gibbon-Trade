@@ -601,7 +601,12 @@ function renderPage() {
 
     // --- Section 1: Summary Dashboard ---
     html += '<div class="dashboard">';
-    html += card(insights.gibbonCount, 'Gibbon Products', '', 'var(--gibbon)', 'index.html');
+    // Gibbon card with yellow highlight
+    html += `<div class="card" onclick="window.location.href='index.html'" style="background:rgba(255,243,178,0.1);border-color:var(--gibbon);">
+        <div class="card-value" style="color:var(--gibbon)">${insights.gibbonCount}</div>
+        <div class="card-label">Gibbon Products</div>
+        <div class="card-desc"></div>
+    </div>`;
     html += card(insights.kevmorCount, 'Kevmor Products', '', 'var(--kevmor)', '#gap-products');
     html += card(insights.intaCount, 'Intafloors Products', '', 'var(--intafloors)', '#gap-products');
     html += card(`${insights.kevmorCovPct}%`, 'Kevmor Coverage',
@@ -613,13 +618,26 @@ function renderPage() {
     if (insights.totalPriced) {
         const cheapPct = ((insights.gibbonCheapest / insights.totalPriced) * 100).toFixed(0);
         const expPct = ((insights.gibbonExpensive / insights.totalPriced) * 100).toFixed(0);
-        html += card(`${cheapPct}%`, 'Gibbon Cheapest',
-            `${insights.gibbonCheapest} of ${insights.totalPriced} compared`, 'var(--green)', '#strengths-weaknesses');
-        html += card(`${expPct}%`, 'Gibbon Most Expensive',
-            `${insights.gibbonExpensive} of ${insights.totalPriced} compared`, 'var(--red)', '#strengths-weaknesses');
+        // Gibbon Cheapest card with yellow highlight
+        html += `<a class="card" href="#strengths-weaknesses" style="background:rgba(255,243,178,0.1);border-color:var(--green);">
+            <div class="card-value" style="color:var(--green)">${cheapPct}%</div>
+            <div class="card-label">Gibbon Cheapest</div>
+            <div class="card-sub">${insights.gibbonCheapest} of ${insights.totalPriced} compared</div>
+        </a>`;
+        // Gibbon Most Expensive card with yellow highlight
+        html += `<a class="card" href="#strengths-weaknesses" style="background:rgba(255,243,178,0.1);border-color:var(--red);">
+            <div class="card-value" style="color:var(--red)">${expPct}%</div>
+            <div class="card-label">Gibbon Most Expensive</div>
+            <div class="card-sub">${insights.gibbonExpensive} of ${insights.totalPriced} compared</div>
+        </a>`;
     }
     html += card(insights.zeroCats.length, 'Empty Categories', 'Categories with zero Gibbon products', 'var(--orange)', '#empty-categories');
-    html += card(insights.gibbonUnique, 'Gibbon Unique', 'Products only Gibbon sells', 'var(--accent)', '#strengths-weaknesses');
+    // Gibbon Unique card with yellow highlight
+    html += `<a class="card" href="#strengths-weaknesses" style="background:rgba(255,243,178,0.1);border-color:var(--accent);">
+        <div class="card-value" style="color:var(--accent)">${insights.gibbonUnique}</div>
+        <div class="card-label">Gibbon Unique</div>
+        <div class="card-sub">Products only Gibbon sells</div>
+    </a>`;
     html += '</div>';
 
     // --- Section 2: Strengths & Weaknesses ---
