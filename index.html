@@ -84,25 +84,81 @@
         }
         .slider-group input[type="range"] { width: 80px; accent-color: var(--accent); }
 
-        /* Supplier toggles */
-        .supplier-toggles {
-            display: flex; gap: 0.35rem;
+        /* Supplier dropdown */
+        .supplier-dropdown {
+            position: relative;
+            display: inline-block;
         }
-        .supplier-toggle {
-            padding: 0.35rem 0.7rem; border-radius: 6px;
-            font-size: 0.78rem; font-weight: 600; cursor: pointer;
-            border: 2px solid transparent; transition: all 0.15s;
-            user-select: none;
+        .supplier-dropdown-button {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: space-between;
         }
-        .supplier-toggle.active { opacity: 1; }
-        .supplier-toggle:not(.active) { opacity: 0.4; }
-        .toggle-kevmor { background: rgba(249,115,22,0.15); color: var(--kevmor); border-color: var(--kevmor); }
-        .toggle-intafloors { background: rgba(6,182,212,0.15); color: var(--intafloors); border-color: var(--intafloors); }
-        .toggle-gibbon { background: rgba(34,197,94,0.15); color: var(--gibbon); border-color: var(--gibbon); }
-        .toggle-marques { background: rgba(168,85,247,0.15); color: var(--marques); border-color: var(--marques); }
-        .toggle-floortrade { background: rgba(236,72,153,0.15); color: var(--floortrade); border-color: var(--floortrade); }
-        .toggle-gluesntools { background: rgba(234,179,8,0.15); color: var(--gluesntools); border-color: var(--gluesntools); }
-        .toggle-homely { background: rgba(20,184,166,0.15); color: var(--homely); border-color: var(--homely); }
+        .supplier-dropdown-button:hover {
+            border-color: var(--accent);
+        }
+        .supplier-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            min-width: 220px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .supplier-dropdown-menu.active {
+            display: block;
+        }
+        .supplier-option {
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+        .supplier-option:hover {
+            background: var(--surface2);
+        }
+        .supplier-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .supplier-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .supplier-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .supplier-label {
+            flex: 1;
+        }
 
         /* Stats bar */
         .stats-bar {
@@ -304,14 +360,41 @@
             <h1>Gibbon Trade<span class="subtitle">Flooring Supplier Comparison</span></h1>
         </div>
         <div class="controls">
-            <div class="supplier-toggles">
-                <div class="supplier-toggle toggle-kevmor active" data-supplier="kevmor" onclick="toggleSupplier('kevmor')">Kevmor</div>
-                <div class="supplier-toggle toggle-intafloors active" data-supplier="intafloors" onclick="toggleSupplier('intafloors')">Intafloors</div>
-                <div class="supplier-toggle toggle-gibbon active" data-supplier="gibbon" onclick="toggleSupplier('gibbon')">Gibbon Trade</div>
-                <div class="supplier-toggle toggle-marques active" data-supplier="marques" onclick="toggleSupplier('marques')">Marques</div>
-                <div class="supplier-toggle toggle-floortrade active" data-supplier="floortrade" onclick="toggleSupplier('floortrade')">Floor<br>Trade</div>
-                <div class="supplier-toggle toggle-gluesntools active" data-supplier="gluesntools" onclick="toggleSupplier('gluesntools')">Glues N Tools</div>
-                <div class="supplier-toggle toggle-homely active" data-supplier="homely" onclick="toggleSupplier('homely')">Homely</div>
+            <div class="supplier-dropdown">
+                <button class="supplier-dropdown-button" onclick="toggleDropdown(event)">
+                    <span id="supplier-count">All Suppliers (7)</span>
+                    <span>▼</span>
+                </button>
+                <div class="supplier-dropdown-menu" id="supplier-menu">
+                    <div class="supplier-option" onclick="toggleSupplier('kevmor', event)">
+                        <div class="supplier-checkbox checked" data-supplier="kevmor"></div>
+                        <span class="supplier-label">Kevmor</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('intafloors', event)">
+                        <div class="supplier-checkbox checked" data-supplier="intafloors"></div>
+                        <span class="supplier-label">Intafloors</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('gibbon', event)">
+                        <div class="supplier-checkbox checked" data-supplier="gibbon"></div>
+                        <span class="supplier-label">Gibbon Trade</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('marques', event)">
+                        <div class="supplier-checkbox checked" data-supplier="marques"></div>
+                        <span class="supplier-label">Marques</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('floortrade', event)">
+                        <div class="supplier-checkbox checked" data-supplier="floortrade"></div>
+                        <span class="supplier-label">Floor Trade</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('gluesntools', event)">
+                        <div class="supplier-checkbox checked" data-supplier="gluesntools"></div>
+                        <span class="supplier-label">Glues N Tools</span>
+                    </div>
+                    <div class="supplier-option" onclick="toggleSupplier('homely', event)">
+                        <div class="supplier-checkbox checked" data-supplier="homely"></div>
+                        <span class="supplier-label">Homely</span>
+                    </div>
+                </div>
             </div>
             <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
             <div class="slider-group">
@@ -525,18 +608,48 @@ function escHtml(t) {
     return d.innerHTML;
 }
 
-function toggleSupplier(key) {
+function toggleDropdown(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('supplier-menu');
+    menu.classList.toggle('active');
+}
+
+function toggleSupplier(key, event) {
+    if (event) event.stopPropagation();
+
     if (activeSuppliers.has(key)) {
         if (activeSuppliers.size <= 1) return; // Must have at least 1
         activeSuppliers.delete(key);
     } else {
         activeSuppliers.add(key);
     }
-    document.querySelector(`.supplier-toggle[data-supplier="${key}"]`)
-        .classList.toggle('active', activeSuppliers.has(key));
+
+    // Update checkbox UI
+    const checkbox = document.querySelector(`.supplier-checkbox[data-supplier="${key}"]`);
+    checkbox.classList.toggle('checked', activeSuppliers.has(key));
+
+    // Update button text
+    updateSupplierCount();
+
     matchCache = null;
     renderAll();
 }
+
+function updateSupplierCount() {
+    const count = activeSuppliers.size;
+    const total = Object.keys(SUPPLIER_META).length;
+    const countText = count === total ? `All Suppliers (${total})` : `${count} Supplier${count !== 1 ? 's' : ''}`;
+    document.getElementById('supplier-count').textContent = countText;
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.querySelector('.supplier-dropdown');
+    const menu = document.getElementById('supplier-menu');
+    if (dropdown && !dropdown.contains(e.target)) {
+        menu.classList.remove('active');
+    }
+});
 
 function debounceRender() {
     clearTimeout(debounceTimer);
