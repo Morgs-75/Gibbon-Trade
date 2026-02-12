@@ -422,8 +422,8 @@
             <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
             <div class="slider-group">
                 <label for="threshold">Match:</label>
-                <input type="range" id="threshold" min="25" max="80" value="40" oninput="updateThresholdLabel()" onchange="renderAll()">
-                <span id="threshold-label">40%</span>
+                <input type="range" id="threshold" min="25" max="80" value="30" oninput="updateThresholdLabel()" onchange="renderAll()">
+                <span id="threshold-label">30%</span>
             </div>
             <a href="fixed.html" class="nav-btn">💰 Fixed Pricing</a>
             <a href="insights.html" class="nav-btn">📊 Insights</a>
@@ -501,7 +501,24 @@ function normalize(name) {
 }
 
 function tokenize(name) {
-    const norm = normalize(name);
+    let norm = normalize(name);
+
+    // Remove supplier names from tokens (they're noise for matching)
+    const supplierNames = ['kevmor', 'intafloors', 'gibbon', 'marques', 'floortrade', 'floor', 'trade',
+                          'gluesntools', 'glues', 'tools', 'homely', 'bayset', 'aussie', 'floorking',
+                          'mjs', 'supply', 'direct', 'coverings'];
+    for (const supplier of supplierNames) {
+        norm = norm.replace(new RegExp('\\b' + supplier + '\\b', 'g'), '');
+    }
+
+    // Normalize unit variations
+    norm = norm.replace(/\blitres?\b/g, 'l');
+    norm = norm.replace(/\bkilograms?\b/g, 'kg');
+    norm = norm.replace(/\bgrams?\b/g, 'g');
+    norm = norm.replace(/\bmetres?\b/g, 'm');
+    norm = norm.replace(/\bmillimetres?\b/g, 'mm');
+    norm = norm.replace(/\bcentimetres?\b/g, 'cm');
+
     const tokens = new Set(norm.match(/[a-z0-9]+/g) || []);
     STOP_WORDS.forEach(w => tokens.delete(w));
     return tokens;
