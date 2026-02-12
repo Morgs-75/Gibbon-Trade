@@ -490,11 +490,11 @@ const STOP_WORDS = new Set([
 ]);
 
 // Keywords that indicate replacement parts/accessories (not complete products)
+// Only use specific, clear indicators to avoid over-filtering
 const PART_KEYWORDS = new Set([
-    'replacement', 'blade', 'blades', 'spare', 'part', 'parts',
-    'accessory', 'accessories', 'refill', 'cartridge', 'tip', 'tips',
-    'attachment', 'attachments', 'bit', 'bits', 'pad', 'pads',
-    'disc', 'discs', 'wheel', 'wheels', 'belt', 'belts',
+    'replacement blade', 'replacement blades', 'spare blade', 'spare blades',
+    'blade only', 'blades only', 'replacement part', 'spare part',
+    'replacement cartridge', 'refill cartridge',
 ]);
 
 function isReplacementPart(product) {
