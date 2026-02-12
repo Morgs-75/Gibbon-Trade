@@ -627,18 +627,31 @@ function escHtml(t) {
 
 function buildSupplierDropdown(supplierConfigs) {
     const menu = document.getElementById('supplier-menu');
-    let html = '';
+    menu.innerHTML = ''; // Clear existing content
 
     for (const config of supplierConfigs) {
-        html += `
-            <div class="supplier-option" onclick="toggleSupplier('${config.key}', event)">
-                <div class="supplier-checkbox checked" data-supplier="${config.key}"></div>
-                <span class="supplier-label">${escHtml(config.name)}</span>
-            </div>
-        `;
+        const option = document.createElement('div');
+        option.className = 'supplier-option';
+
+        const checkbox = document.createElement('div');
+        checkbox.className = 'supplier-checkbox checked';
+        checkbox.setAttribute('data-supplier', config.key);
+
+        const label = document.createElement('span');
+        label.className = 'supplier-label';
+        label.textContent = config.name;
+
+        option.appendChild(checkbox);
+        option.appendChild(label);
+
+        // Add click handler
+        option.addEventListener('click', (event) => {
+            toggleSupplier(config.key, event);
+        });
+
+        menu.appendChild(option);
     }
 
-    menu.innerHTML = html;
     updateSupplierCount();
 }
 
@@ -660,7 +673,13 @@ function toggleSupplier(key, event) {
 
     // Update checkbox UI
     const checkbox = document.querySelector(`.supplier-checkbox[data-supplier="${key}"]`);
-    checkbox.classList.toggle('checked', activeSuppliers.has(key));
+    if (checkbox) {
+        if (activeSuppliers.has(key)) {
+            checkbox.classList.add('checked');
+        } else {
+            checkbox.classList.remove('checked');
+        }
+    }
 
     // Update button text
     updateSupplierCount();
