@@ -93,6 +93,76 @@ export default async (req) => {
         headers: { "Content-Type": "application/json" }
       });
 
+    } else if (action === 'edit') {
+      // Update existing supplier
+      const { originalKey, key, name, url, type, color } = data;
+
+      if (!originalKey || !key || !name || !url || !type) {
+        return new Response(JSON.stringify({ error: "Missing required fields" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      // Get existing supplier
+      const { data: existing } = await supabase
+        .from('supplier_config')
+        .select('*')
+        .eq('key', originalKey)
+        .single();
+
+      if (!existing) {
+        return new Response(JSON.stringify({ error: "Supplier not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      // If key changed, check for duplicates
+      if (key !== originalKey) {
+        const { data: duplicate } = await supabase
+          .from('supplier_config')
+          .select('key')
+          .eq('key', key)
+          .single();
+
+        if (duplicate) {
+          return new Response(JSON.stringify({ error: "New supplier key already exists" }), {
+            status: 409,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      }
+
+      // Update supplier
+      const { error } = await supabase
+        .from('supplier_config')
+        .update({
+          key,
+          name,
+          url,
+          type,
+          color: color || '#3b82f6',
+          updated_at: new Date().toISOString()
+        })
+        .eq('key', originalKey);
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        return new Response(JSON.stringify({ error: "Failed to update supplier: " + error.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: `${name} updated successfully!`
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+
     } else if (action === 'delete') {
       // Remove supplier
       const { key } = data;

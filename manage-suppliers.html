@@ -364,10 +364,12 @@
         </div>
     </div>
 
-    <!-- Add New Supplier -->
+    <!-- Add/Edit Supplier -->
     <div class="card">
-        <h3><span class="card-icon">➕</span> Add New Supplier</h3>
+        <h3><span class="card-icon" id="form-icon">➕</span> <span id="form-title">Add New Supplier</span></h3>
         <form id="add-supplier-form">
+            <input type="hidden" id="edit-mode" value="">
+            <input type="hidden" id="original-key" value="">
             <div class="form-group">
                 <label for="supplier-name">Supplier Name *</label>
                 <input type="text" id="supplier-name" placeholder="e.g., Floor Supplies Australia" required>
@@ -400,7 +402,10 @@
                 <input type="color" id="supplier-color" value="#3b82f6">
                 <small>Color for charts and badges</small>
             </div>
-            <button type="submit" class="btn btn-primary">Add Supplier</button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" id="form-submit-btn">Add Supplier</button>
+                <button type="button" class="btn btn-ghost" id="form-cancel-btn" onclick="cancelEdit()" style="display: none;">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
@@ -500,6 +505,9 @@ function renderSuppliers() {
                     </div>
                 </div>
                 <div class="supplier-actions">
+                    <button class="btn btn-ghost" onclick="editSupplier('${sup.key}')" style="border-color: var(--accent); color: var(--accent);">
+                        ✏️ Edit
+                    </button>
                     <button class="btn btn-danger" onclick="deleteSupplier('${sup.key}')" ${deleteDisabled}>
                         🗑️ Remove
                     </button>
@@ -518,7 +526,7 @@ function escHtml(t) {
 }
 
 // ---------------------------------------------------------------------------
-// Add supplier
+// Add/Edit supplier
 // ---------------------------------------------------------------------------
 document.getElementById('add-supplier-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -528,6 +536,8 @@ document.getElementById('add-supplier-form').addEventListener('submit', (e) => {
     const url = document.getElementById('supplier-url').value.trim();
     const type = document.getElementById('supplier-type').value;
     const color = document.getElementById('supplier-color').value;
+    const editMode = document.getElementById('edit-mode').value;
+    const originalKey = document.getElementById('original-key').value;
 
     // Validate
     if (!name || !key || !url || !type) {
@@ -540,19 +550,71 @@ document.getElementById('add-supplier-form').addEventListener('submit', (e) => {
         return;
     }
 
-    if (suppliers.find(s => s.key === key)) {
-        alert('A supplier with this key already exists');
-        return;
+    // Check for duplicate key (only if not editing or key changed)
+    if (editMode !== 'edit' || key !== originalKey) {
+        if (suppliers.find(s => s.key === key)) {
+            alert('A supplier with this key already exists');
+            return;
+        }
     }
 
-    // Queue the add action
-    pendingAction = {
-        type: 'add',
-        data: { key, name, url, type, color, protected: false }
-    };
-
-    showPinModal('Add Supplier');
+    // Queue the add or edit action
+    if (editMode === 'edit') {
+        pendingAction = {
+            type: 'edit',
+            data: { originalKey, key, name, url, type, color }
+        };
+        showPinModal('Update Supplier');
+    } else {
+        pendingAction = {
+            type: 'add',
+            data: { key, name, url, type, color, protected: false }
+        };
+        showPinModal('Add Supplier');
+    }
 });
+
+// ---------------------------------------------------------------------------
+// Edit supplier
+// ---------------------------------------------------------------------------
+function editSupplier(key) {
+    const supplier = suppliers.find(s => s.key === key);
+    if (!supplier) return;
+
+    // Populate form
+    document.getElementById('supplier-name').value = supplier.name;
+    document.getElementById('supplier-key').value = supplier.key;
+    document.getElementById('supplier-url').value = supplier.url;
+    document.getElementById('supplier-type').value = supplier.type;
+    document.getElementById('supplier-color').value = supplier.color || '#3b82f6';
+
+    // Set edit mode
+    document.getElementById('edit-mode').value = 'edit';
+    document.getElementById('original-key').value = key;
+
+    // Update UI
+    document.getElementById('form-icon').textContent = '✏️';
+    document.getElementById('form-title').textContent = 'Edit Supplier';
+    document.getElementById('form-submit-btn').textContent = 'Update Supplier';
+    document.getElementById('form-cancel-btn').style.display = 'inline-block';
+
+    // Scroll to form
+    document.getElementById('add-supplier-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelEdit() {
+    // Reset form
+    document.getElementById('add-supplier-form').reset();
+    document.getElementById('edit-mode').value = '';
+    document.getElementById('original-key').value = '';
+    document.getElementById('supplier-color').value = '#3b82f6';
+
+    // Reset UI
+    document.getElementById('form-icon').textContent = '➕';
+    document.getElementById('form-title').textContent = 'Add New Supplier';
+    document.getElementById('form-submit-btn').textContent = 'Add Supplier';
+    document.getElementById('form-cancel-btn').style.display = 'none';
+}
 
 // ---------------------------------------------------------------------------
 // Delete supplier
@@ -634,16 +696,15 @@ async function confirmAction() {
 
             // Capture action type before closing modal
             const wasAdd = pendingAction.type === 'add';
+            const wasEdit = pendingAction.type === 'edit';
 
             // Reload suppliers after 1 second
             setTimeout(() => {
                 closePinModal();
                 loadSuppliers();
-                // Reset form if it was an add
-                if (wasAdd) {
-                    document.getElementById('add-supplier-form').reset();
-                    // Also reset color input to default
-                    document.getElementById('supplier-color').value = '#3b82f6';
+                // Reset form
+                if (wasAdd || wasEdit) {
+                    cancelEdit();
                 }
             }, 1000);
         } else {
