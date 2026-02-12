@@ -1053,9 +1053,19 @@ async function loadData() {
         }
 
         // Map source to suppliers (source field matches supplier key)
+        // Initialize all suppliers from SUPPLIER_META with empty arrays
         const suppliers = {};
+        for (const key of Object.keys(SUPPLIER_META)) {
+            suppliers[key] = { products: [] };
+        }
+        // Then populate with actual products
         for (const [src, prods] of Object.entries(bySource)) {
-            suppliers[src] = { products: prods };
+            if (suppliers[src]) {
+                suppliers[src].products = prods;
+            } else {
+                // Product source not in SUPPLIER_META (shouldn't happen, but handle it)
+                suppliers[src] = { products: prods };
+            }
         }
 
         const latestLog = logs.length ? logs[0] : null;
