@@ -632,13 +632,18 @@ async function confirmAction() {
             msg.className = 'modal-msg msg-ok';
             msg.textContent = data.message || 'Success!';
 
+            // Capture action type before closing modal
+            const wasAdd = pendingAction.type === 'add';
+
             // Reload suppliers after 1 second
             setTimeout(() => {
                 closePinModal();
                 loadSuppliers();
                 // Reset form if it was an add
-                if (pendingAction.type === 'add') {
+                if (wasAdd) {
                     document.getElementById('add-supplier-form').reset();
+                    // Also reset color input to default
+                    document.getElementById('supplier-color').value = '#3b82f6';
                 }
             }, 1000);
         } else {
