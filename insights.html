@@ -25,6 +25,19 @@
             --gluesntools: #eab308;
             --homely: #14b8a6;
         }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html {
             scroll-behavior: smooth;
@@ -239,6 +252,9 @@
         <div style="display:flex;gap:0.5rem;">
             <a href="fixed.html" class="nav-link">💰 Fixed Pricing</a>
             <a href="manage-suppliers.html" class="nav-link">🏪 Suppliers</a>
+            <button class="nav-link" onclick="toggleTheme()" id="theme-toggle" title="Toggle light/dark mode" style="cursor:pointer;border:1px solid var(--border);">
+                <span id="theme-icon">🌙</span>
+            </button>
             <a href="index.html" class="nav-link">&larr; Back to Comparison</a>
         </div>
     </div>
@@ -809,6 +825,33 @@ function renderGapTable() {
 
 // ---------------------------------------------------------------------------
 // Init
+// ---------------------------------------------------------------------------
+// Theme toggle
+// ---------------------------------------------------------------------------
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+// Initialize theme
+initTheme();
+
 // ---------------------------------------------------------------------------
 loadData();
 </script>
