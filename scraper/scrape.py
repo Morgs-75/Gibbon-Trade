@@ -1,11 +1,12 @@
 """
 Scheduled scraper for flooring supplier price comparison.
-Supports: Kevmor, Intafloors, Gibbon Trade, Marques, Floor Trade, Glues N Tools, Homely.
+Reads supplier configuration from Supabase supplier_config table.
+Supports WooCommerce, Shopify, and custom scrapers.
 Writes product data to Supabase PostgreSQL.
 
 Usage:
-    python scrape.py                  # scrape all suppliers
-    python scrape.py kevmor           # scrape one supplier
+    python scrape.py                  # scrape all enabled suppliers from database
+    python scrape.py kevmor           # scrape one specific supplier
     python scrape.py intafloors gibbon  # scrape specific suppliers
 
 Environment variables:
@@ -458,15 +459,59 @@ SCRAPERS = {
 
 
 def main():
-    targets = sys.argv[1:] if len(sys.argv) > 1 else list(SCRAPERS.keys())
+    # Load supplier configuration from database
+    logger.info("Loading supplier configuration from database...")
+    try:
+        response = supabase.table("supplier_config").select("*").eq("enabled", True).execute()
+        db_suppliers = {s["key"]: s for s in response.data}
+        logger.info(f"Loaded {len(db_suppliers)} enabled suppliers from database")
+    except Exception as e:
+        logger.error(f"Failed to load supplier config from database: {e}")
+        logger.info("Falling back to hardcoded SCRAPERS")
+        db_suppliers = {}
+
+    # Allow command-line override for specific suppliers
+    if len(sys.argv) > 1:
+        targets = sys.argv[1:]
+    else:
+        # Use database suppliers if available, otherwise fall back to hardcoded list
+        targets = list(db_suppliers.keys()) if db_suppliers else list(SCRAPERS.keys())
 
     for source in targets:
-        if source not in SCRAPERS:
+        # Get supplier config from database or fallback to hardcoded
+        if source in db_suppliers:
+            config = db_suppliers[source]
+            supplier_type = config["type"]
+            supplier_url = config["url"]
+            supplier_name = config["name"]
+
+            logger.info(f"Scraping {supplier_name} ({source}) - type: {supplier_type}")
+
+            # Determine which scraper function to use based on type
+            if supplier_type == "custom" and source in SCRAPERS:
+                # Use custom scraper function
+                scraper_func = SCRAPERS[source]
+            elif supplier_type == "woocommerce":
+                # Use generic WooCommerce scraper
+                scraper_func = lambda: _scrape_woocommerce(supplier_url, source)
+            elif supplier_type == "shopify":
+                # Use generic Shopify scraper
+                scraper_func = lambda: _scrape_shopify(supplier_url, source)
+            else:
+                logger.error(f"Unknown scraper type '{supplier_type}' for {source}")
+                continue
+        elif source in SCRAPERS:
+            # Fallback to hardcoded scraper
+            logger.info(f"Using hardcoded scraper for {source}")
+            scraper_func = SCRAPERS[source]
+        else:
             logger.error(f"Unknown source: {source}")
             continue
+
+        # Execute scrape
         started = datetime.now(timezone.utc)
         try:
-            products = SCRAPERS[source]()
+            products = scraper_func()
             upsert_products(source, products, started)
         except Exception as e:
             logger.exception(f"Failed to scrape {source}: {e}")

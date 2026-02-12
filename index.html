@@ -416,34 +416,7 @@
                     <span>▼</span>
                 </button>
                 <div class="supplier-dropdown-menu" id="supplier-menu">
-                    <div class="supplier-option" onclick="toggleSupplier('kevmor', event)">
-                        <div class="supplier-checkbox checked" data-supplier="kevmor"></div>
-                        <span class="supplier-label">Kevmor</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('intafloors', event)">
-                        <div class="supplier-checkbox checked" data-supplier="intafloors"></div>
-                        <span class="supplier-label">Intafloors</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('gibbon', event)">
-                        <div class="supplier-checkbox checked" data-supplier="gibbon"></div>
-                        <span class="supplier-label">Gibbon Trade</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('marques', event)">
-                        <div class="supplier-checkbox checked" data-supplier="marques"></div>
-                        <span class="supplier-label">Marques</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('floortrade', event)">
-                        <div class="supplier-checkbox checked" data-supplier="floortrade"></div>
-                        <span class="supplier-label">Floor Trade</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('gluesntools', event)">
-                        <div class="supplier-checkbox checked" data-supplier="gluesntools"></div>
-                        <span class="supplier-label">Glues N Tools</span>
-                    </div>
-                    <div class="supplier-option" onclick="toggleSupplier('homely', event)">
-                        <div class="supplier-checkbox checked" data-supplier="homely"></div>
-                        <span class="supplier-label">Homely</span>
-                    </div>
+                    <!-- Suppliers will be loaded dynamically from database -->
                 </div>
             </div>
             <input type="text" id="search" placeholder="Search products..." oninput="debounceRender()">
@@ -500,21 +473,12 @@
 // State
 // ---------------------------------------------------------------------------
 let DATA = null;
-let activeSuppliers = new Set(['kevmor', 'intafloors', 'gibbon', 'marques', 'floortrade', 'gluesntools', 'homely']);
+let SUPPLIER_META = {}; // Will be loaded from database
+let activeSuppliers = new Set();
 let currentTab = 'matched';
 let debounceTimer = null;
 let matchCache = null;
 let matchCacheKey = '';
-
-const SUPPLIER_META = {
-    kevmor: { name: 'Kevmor', color: '#f97316', cssClass: 'source-kevmor' },
-    intafloors: { name: 'Intafloors', color: '#06b6d4', cssClass: 'source-intafloors' },
-    gibbon: { name: 'Gibbon Trade', color: '#22c55e', cssClass: 'source-gibbon' },
-    marques: { name: 'Marques', color: '#a855f7', cssClass: 'source-marques' },
-    floortrade: { name: 'Floor Trade', color: '#ec4899', cssClass: 'source-floortrade' },
-    gluesntools: { name: 'Glues N Tools', color: '#eab308', cssClass: 'source-gluesntools' },
-    homely: { name: 'Homely', color: '#14b8a6', cssClass: 'source-homely' },
-};
 
 // ---------------------------------------------------------------------------
 // Matching logic (ported from Python)
@@ -659,6 +623,23 @@ function escHtml(t) {
     const d = document.createElement('div');
     d.textContent = t || '';
     return d.innerHTML;
+}
+
+function buildSupplierDropdown(supplierConfigs) {
+    const menu = document.getElementById('supplier-menu');
+    let html = '';
+
+    for (const config of supplierConfigs) {
+        html += `
+            <div class="supplier-option" onclick="toggleSupplier('${config.key}', event)">
+                <div class="supplier-checkbox checked" data-supplier="${config.key}"></div>
+                <span class="supplier-label">${escHtml(config.name)}</span>
+            </div>
+        `;
+    }
+
+    menu.innerHTML = html;
+    updateSupplierCount();
 }
 
 function toggleDropdown(event) {
@@ -982,11 +963,27 @@ async function sbFetch(path) {
 // ---------------------------------------------------------------------------
 async function loadData() {
     try {
-        // Fetch products and latest scrape log in parallel
-        const [products, logs] = await Promise.all([
+        // Fetch products, scrape logs, and supplier config in parallel
+        const [products, logs, supplierConfigs] = await Promise.all([
             sbFetch('products?select=*&order=name.asc'),
             sbFetch('scrape_log?select=*&order=completed_at.desc&limit=3'),
+            sbFetch('supplier_config?select=*&eq=enabled.true&order=name.asc'),
         ]);
+
+        // Build SUPPLIER_META from database
+        SUPPLIER_META = {};
+        for (const config of supplierConfigs) {
+            SUPPLIER_META[config.key] = {
+                name: config.name,
+                color: config.color || '#3b82f6',
+                cssClass: `source-${config.key}`
+            };
+            // Add to active suppliers by default
+            activeSuppliers.add(config.key);
+        }
+
+        // Build dropdown menu from supplier configs
+        buildSupplierDropdown(supplierConfigs);
 
         // Group by source into supplier structure
         const bySource = {};
