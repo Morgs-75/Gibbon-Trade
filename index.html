@@ -509,6 +509,7 @@ let currentTab = 'matched';
 let debounceTimer = null;
 let matchCache = null;
 let matchCacheKey = '';
+let supplierChangesPending = false;
 
 // ---------------------------------------------------------------------------
 // Matching logic (ported from Python)
@@ -672,7 +673,15 @@ function buildSupplierDropdown(supplierConfigs) {
 function toggleDropdown(event) {
     event.stopPropagation();
     const menu = document.getElementById('supplier-menu');
+    const wasActive = menu.classList.contains('active');
     menu.classList.toggle('active');
+
+    // If closing the dropdown and there are pending changes, render now
+    if (wasActive && supplierChangesPending) {
+        supplierChangesPending = false;
+        matchCache = null;
+        renderAll();
+    }
 }
 
 function toggleSupplier(key, event) {
@@ -685,7 +694,7 @@ function toggleSupplier(key, event) {
         activeSuppliers.add(key);
     }
 
-    // Update checkbox UI
+    // Update checkbox UI immediately for responsive feel
     const checkbox = document.querySelector(`.supplier-checkbox[data-supplier="${key}"]`);
     if (checkbox) {
         if (activeSuppliers.has(key)) {
@@ -698,8 +707,8 @@ function toggleSupplier(key, event) {
     // Update button text
     updateSupplierCount();
 
-    matchCache = null;
-    renderAll();
+    // Mark that we have pending changes but don't render yet
+    supplierChangesPending = true;
 }
 
 function updateSupplierCount() {
@@ -714,7 +723,15 @@ document.addEventListener('click', (e) => {
     const dropdown = document.querySelector('.supplier-dropdown');
     const menu = document.getElementById('supplier-menu');
     if (dropdown && !dropdown.contains(e.target)) {
+        const wasActive = menu.classList.contains('active');
         menu.classList.remove('active');
+
+        // If closing the dropdown and there are pending changes, render now
+        if (wasActive && supplierChangesPending) {
+            supplierChangesPending = false;
+            matchCache = null;
+            renderAll();
+        }
     }
 });
 
