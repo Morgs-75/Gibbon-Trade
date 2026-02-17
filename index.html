@@ -432,6 +432,9 @@
                 <span id="theme-icon">🌙</span>
             </button>
             <button class="refresh-btn" onclick="showPinModal()">Refresh Data</button>
+            <button class="nav-btn" onclick="handleLogout()" title="Sign out">
+                🚪 Logout
+            </button>
         </div>
     </div>
 </header>
@@ -468,7 +471,34 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ---------------------------------------------------------------------------
+// Authentication
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
+
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let authToken = null;
+
+// Check authentication on page load
+async function checkAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    authToken = session.access_token;
+    return true;
+}
+
+async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -939,19 +969,22 @@ function renderAllProducts(el, products) {
 }
 
 // ---------------------------------------------------------------------------
-// Supabase config
+// Supabase API calls with authentication
 // ---------------------------------------------------------------------------
-const SUPABASE_URL = 'https://ualogaryduudrnozmoyx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbG9nYXJ5ZHV1ZHJub3ptb3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NjQyOTcsImV4cCI6MjA4NjM0MDI5N30.qdsd1YKj8VjafV1lxA9p0iqSONfH5TDQyi41ljSYFhs';
-
-const SB_HEADERS = {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-};
-
 async function sbFetch(path) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: SB_HEADERS });
-    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    const headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${authToken}`,
+    };
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
+    if (!res.ok) {
+        if (res.status === 401) {
+            // Unauthorized - redirect to login
+            window.location.href = 'login.html';
+            return;
+        }
+        throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    }
     return res.json();
 }
 
@@ -1156,7 +1189,13 @@ function initTheme() {
 // Initialize theme before page loads
 initTheme();
 
-loadData();
+// Check auth and load data
+(async () => {
+    const isAuthed = await checkAuth();
+    if (isAuthed) {
+        loadData();
+    }
+})();
 </script>
 </body>
 </html>

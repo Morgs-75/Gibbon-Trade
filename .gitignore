@@ -1,2 +1,4 @@
 node_modules/
 .netlify/
+*.csv
+scraper/import_gibbon_csv.py
