@@ -644,12 +644,37 @@ function buildSupplierDropdown(supplierConfigs) {
     const menu = document.getElementById('supplier-menu');
     menu.innerHTML = ''; // Clear existing content
 
+    // Add "Select All" option at the top
+    const selectAllOption = document.createElement('div');
+    selectAllOption.className = 'supplier-option';
+    selectAllOption.style.borderBottom = '1px solid var(--border)';
+    selectAllOption.style.fontWeight = '600';
+
+    const selectAllCheckbox = document.createElement('div');
+    selectAllCheckbox.className = 'supplier-checkbox';
+    selectAllCheckbox.id = 'select-all-checkbox';
+
+    const selectAllLabel = document.createElement('span');
+    selectAllLabel.className = 'supplier-label';
+    selectAllLabel.textContent = 'Select All';
+
+    selectAllOption.appendChild(selectAllCheckbox);
+    selectAllOption.appendChild(selectAllLabel);
+
+    selectAllOption.addEventListener('click', (event) => {
+        toggleSelectAll(event);
+    });
+
+    menu.appendChild(selectAllOption);
+
+    // Add individual suppliers
     for (const config of supplierConfigs) {
         const option = document.createElement('div');
         option.className = 'supplier-option';
 
         const checkbox = document.createElement('div');
-        checkbox.className = 'supplier-checkbox checked';
+        // Check if this supplier is active
+        checkbox.className = activeSuppliers.has(config.key) ? 'supplier-checkbox checked' : 'supplier-checkbox';
         checkbox.setAttribute('data-supplier', config.key);
 
         const label = document.createElement('span');
@@ -667,6 +692,7 @@ function buildSupplierDropdown(supplierConfigs) {
         menu.appendChild(option);
     }
 
+    updateSelectAllCheckbox();
     updateSupplierCount();
 }
 
@@ -709,6 +735,9 @@ function toggleSupplier(key, event) {
 
     // Mark that we have pending changes but don't render yet
     supplierChangesPending = true;
+
+    // Update select all checkbox state
+    updateSelectAllCheckbox();
 }
 
 function updateSupplierCount() {
@@ -716,6 +745,53 @@ function updateSupplierCount() {
     const total = Object.keys(SUPPLIER_META).length;
     const countText = count === total ? `All Suppliers (${total})` : `${count} Supplier${count !== 1 ? 's' : ''}`;
     document.getElementById('supplier-count').textContent = countText;
+}
+
+function toggleSelectAll(event) {
+    if (event) event.stopPropagation();
+
+    const allKeys = Object.keys(SUPPLIER_META);
+    const allSelected = activeSuppliers.size === allKeys.length;
+
+    if (allSelected) {
+        // Deselect all except one (keep first one)
+        const firstKey = allKeys[0];
+        activeSuppliers.clear();
+        activeSuppliers.add(firstKey);
+    } else {
+        // Select all
+        allKeys.forEach(key => activeSuppliers.add(key));
+    }
+
+    // Update all checkboxes
+    allKeys.forEach(key => {
+        const checkbox = document.querySelector(`.supplier-checkbox[data-supplier="${key}"]`);
+        if (checkbox) {
+            if (activeSuppliers.has(key)) {
+                checkbox.classList.add('checked');
+            } else {
+                checkbox.classList.remove('checked');
+            }
+        }
+    });
+
+    updateSelectAllCheckbox();
+    updateSupplierCount();
+    supplierChangesPending = true;
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (!selectAllCheckbox) return;
+
+    const allKeys = Object.keys(SUPPLIER_META);
+    const allSelected = activeSuppliers.size === allKeys.length;
+
+    if (allSelected) {
+        selectAllCheckbox.classList.add('checked');
+    } else {
+        selectAllCheckbox.classList.remove('checked');
+    }
 }
 
 // Close dropdown when clicking outside
@@ -1031,6 +1107,9 @@ async function loadData() {
         SUPPLIER_META = {};
         activeSuppliers.clear();
 
+        // Default active suppliers
+        const defaultActiveKeys = ['gibbon', 'kevmor', 'intafloors'];
+
         if (supplierConfigs && supplierConfigs.length > 0) {
             // Use database config
             for (const config of supplierConfigs) {
@@ -1039,7 +1118,10 @@ async function loadData() {
                     color: config.color || '#3b82f6',
                     cssClass: `source-${config.key}`
                 };
-                activeSuppliers.add(config.key);
+                // Only add to activeSuppliers if in default list
+                if (defaultActiveKeys.includes(config.key)) {
+                    activeSuppliers.add(config.key);
+                }
             }
             buildSupplierDropdown(supplierConfigs);
         } else {
@@ -1060,7 +1142,10 @@ async function loadData() {
                     color: config.color,
                     cssClass: `source-${config.key}`
                 };
-                activeSuppliers.add(config.key);
+                // Only add to activeSuppliers if in default list
+                if (defaultActiveKeys.includes(config.key)) {
+                    activeSuppliers.add(config.key);
+                }
             }
             buildSupplierDropdown(defaultSuppliers);
         }
