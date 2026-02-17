@@ -299,7 +299,7 @@ def scrape_intafloors():
 
 
 def scrape_gibbon():
-    return _scrape_woocommerce("https://gibbontrade.com.au", "gibbon")
+    return _scrape_woocommerce("https://gibbontrade.com.au", "gibbon_web")
 
 
 def scrape_marques():
@@ -450,7 +450,7 @@ def upsert_products(source: str, products: list, started_at: datetime):
 SCRAPERS = {
     "kevmor": scrape_kevmor,
     "intafloors": scrape_intafloors,
-    "gibbon": scrape_gibbon,
+    "gibbon_web": scrape_gibbon,
     "marques": scrape_marques,
     "floortrade": scrape_floortrade,
     "gluesntools": scrape_gluesntools,

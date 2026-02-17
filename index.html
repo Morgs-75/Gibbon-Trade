@@ -275,6 +275,8 @@
         .source-kevmor { background: rgba(249,115,22,0.2); color: var(--kevmor); }
         .source-intafloors { background: rgba(6,182,212,0.2); color: var(--intafloors); }
         .source-gibbon { background: rgba(34,197,94,0.2); color: var(--gibbon); }
+        .source-gibbon_web { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .source-gibbon_csv { background: rgba(22,163,74,0.2); color: #16a34a; }
         .source-marques { background: rgba(168,85,247,0.2); color: var(--marques); }
         .source-floortrade { background: rgba(236,72,153,0.2); color: var(--floortrade); }
         .source-gluesntools { background: rgba(234,179,8,0.2); color: var(--gluesntools); }
@@ -1108,7 +1110,7 @@ async function loadData() {
         activeSuppliers.clear();
 
         // Default active suppliers
-        const defaultActiveKeys = ['gibbon', 'kevmor', 'intafloors'];
+        const defaultActiveKeys = ['gibbon_csv', 'gibbon_web', 'kevmor', 'intafloors'];
 
         if (supplierConfigs && supplierConfigs.length > 0) {
             // Use database config
