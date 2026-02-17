@@ -536,12 +536,20 @@ function normalize(name) {
 function tokenize(name) {
     let norm = normalize(name);
 
-    // Only remove actual supplier retailer names (not brands)
-    const supplierNames = ['kevmor', 'intafloors', 'gibbon', 'trade', 'marques',
-                          'gluesntools', 'homely', 'bayset', 'floorking', 'mjs'];
-    for (const supplier of supplierNames) {
-        norm = norm.replace(new RegExp('\\b' + supplier + '\\b', 'g'), '');
+    // Remove supplier and common brand names
+    const brandNames = [
+        'kevmor', 'intafloors', 'gibbon', 'trade', 'marques', 'gluesntools', 'homely',
+        'mapei', 'ultrabond', 'nexus', 'rla', 'dnu', 'bostik', 'sika', 'ardex',
+        'dunlop', 'selleys', 'roberts', 'henry', 'uzin', 'wakol', 'laticrete',
+        'eco', 'premium', 'professional', 'pro', 'super', 'plus', 'max', 'ultra',
+        'standard', 'general', 'purpose', 'gp', 'lv', 'xl', 'hd', 'heavy', 'duty'
+    ];
+    for (const brand of brandNames) {
+        norm = norm.replace(new RegExp('\\b' + brand + '\\b', 'g'), '');
     }
+
+    // Remove standalone numbers (product codes)
+    norm = norm.replace(/\b\d{2,4}\b/g, '');
 
     // Normalize unit variations
     norm = norm.replace(/\blitres?\b/g, 'l');
