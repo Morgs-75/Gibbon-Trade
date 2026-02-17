@@ -1117,8 +1117,8 @@ async function loadData() {
         SUPPLIER_META = {};
         activeSuppliers.clear();
 
-        // Default active suppliers
-        const defaultActiveKeys = ['gibbon_csv', 'gibbon_web', 'kevmor', 'intafloors'];
+        // Default active suppliers - use 'gibbon' for backwards compatibility until data is migrated
+        const defaultActiveKeys = ['gibbon_csv', 'gibbon_web', 'gibbon', 'kevmor', 'intafloors'];
 
         if (supplierConfigs && supplierConfigs.length > 0) {
             // Use database config
@@ -1141,6 +1141,8 @@ async function loadData() {
                 { key: 'kevmor', name: 'Kevmor', color: '#f97316' },
                 { key: 'intafloors', name: 'Intafloors', color: '#06b6d4' },
                 { key: 'gibbon', name: 'Gibbon Trade', color: '#22c55e' },
+                { key: 'gibbon_csv', name: 'Gibbon CSV', color: '#16a34a' },
+                { key: 'gibbon_web', name: 'Gibbon Web', color: '#22c55e' },
                 { key: 'marques', name: 'Marques', color: '#a855f7' },
                 { key: 'floortrade', name: 'Floor Trade', color: '#ec4899' },
                 { key: 'gluesntools', name: 'Glues N Tools', color: '#eab308' },
@@ -1199,17 +1201,46 @@ async function loadData() {
             suppliers,
         };
 
+        // Log loaded sources for debugging
+        console.info('Loaded suppliers from database:', Object.keys(suppliers).map(k => `${k} (${suppliers[k].products.length} products)`).join(', '));
+        console.info('Active suppliers:', [...activeSuppliers].join(', '));
+
         renderAll();
     } catch (e) {
         console.error('Supabase load error:', e);
         // Fallback: try loading from static data.json
         try {
             const res = await fetch('data.json');
-            DATA = await res.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            const fallbackData = await res.json();
+
+            // Map old source names to new for backwards compatibility
+            if (fallbackData.suppliers) {
+                // If old 'gibbon' source exists but gibbon_web/gibbon_csv don't, map it
+                if (fallbackData.suppliers.gibbon && !fallbackData.suppliers.gibbon_web) {
+                    console.info('Mapping legacy "gibbon" source to "gibbon_web" for compatibility');
+                    fallbackData.suppliers.gibbon_web = fallbackData.suppliers.gibbon;
+                }
+            }
+
+            DATA = fallbackData;
+            console.warn('Using fallback data.json due to Supabase error');
             renderAll();
         } catch (e2) {
+            console.error('Fallback data.json load error:', e2);
             document.getElementById('content').innerHTML =
-                `<div class="empty-state"><h2>Failed to load data</h2><p>${escHtml(e.message)}</p><p style="font-size:0.8rem;margin-top:0.5rem">Falling back to static data also failed.</p></div>`;
+                `<div class="empty-state">
+                    <h2>Failed to load data</h2>
+                    <p><strong>Supabase error:</strong> ${escHtml(e.message)}</p>
+                    <p><strong>Fallback error:</strong> ${escHtml(e2.message)}</p>
+                    <p style="font-size:0.8rem;margin-top:0.5rem;color:var(--text-muted)">
+                        Please check:<br>
+                        • Your authentication session is valid<br>
+                        • Supabase RLS policies allow authenticated reads<br>
+                        • Network connection is working<br>
+                        • data.json file exists and is valid
+                    </p>
+                </div>`;
         }
     }
 }
